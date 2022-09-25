@@ -2,25 +2,31 @@
 ; File Created by SDCC : free open source ANSI-C Compiler
 ; Version 4.0.0 #11528 (Linux)
 ;--------------------------------------------------------
-	.module main
+	.module test_w25qxx
 	.optsdcc -mmcs51 --model-small
 	
 ;--------------------------------------------------------
 ; Public variables in this module
 ;--------------------------------------------------------
 	.globl _main
+	.globl _testChipErase
+	.globl _testReadStatus
+	.globl _testReadBytes
+	.globl _testReadByte
+	.globl _testReadUniqueId
+	.globl _testReadDeviceId
 	.globl _blink
 	.globl _DeviceUSBInterrupt
 	.globl _USBInterrupt
+	.globl _chipErase
+	.globl _readStatus
+	.globl _readBytes
 	.globl _readUniqueId
 	.globl _SPISetup
 	.globl _readDeviceId
 	.globl _readByte
 	.globl _printNumbers
 	.globl _printText
-	.globl _USBSerial_flush
-	.globl _USBSerial_available
-	.globl _USBSerial_read
 	.globl _USBInit
 	.globl _mDelaymS
 	.globl _CfgFsys
@@ -257,7 +263,6 @@
 	.globl _B
 	.globl _ACC
 	.globl _PSW
-	.globl _devId
 ;--------------------------------------------------------
 ; special function registers
 ;--------------------------------------------------------
@@ -524,12 +529,8 @@ bits:
 ; internal ram data
 ;--------------------------------------------------------
 	.area DSEG    (DATA)
-_UNIQUEID:
-	.ds 8
-_devId::
-	.ds 2
-_main_i_393216_141:
-	.ds 4
+_testReadByte_p_131072_149:
+	.ds 1
 ;--------------------------------------------------------
 ; overlayable items in internal ram 
 ;--------------------------------------------------------
@@ -561,6 +562,8 @@ __start__stack:
 ; external ram data
 ;--------------------------------------------------------
 	.area XSEG    (XDATA)
+__sbuffer:
+	.ds 32
 ;--------------------------------------------------------
 ; absolute external ram data
 ;--------------------------------------------------------
@@ -569,6 +572,8 @@ __start__stack:
 ; external initialized ram data
 ;--------------------------------------------------------
 	.area XISEG   (XDATA)
+_UNIQUEID:
+	.ds 8
 	.area HOME    (CODE)
 	.area GSINIT0 (CODE)
 	.area GSINIT1 (CODE)
@@ -615,12 +620,6 @@ __interrupt_vect:
 	.globl __mcs51_genXINIT
 	.globl __mcs51_genXRAMCLEAR
 	.globl __mcs51_genRAMCLEAR
-;	App/flash/w25qxx.h:34: static uint8_t UNIQUEID[8] = {0};
-	mov	_UNIQUEID,#0x00
-;	App/main.c:17: uint16_t devId = 0;
-	clr	a
-	mov	_devId,a
-	mov	(_devId + 1),a
 	.area GSFINAL (CODE)
 	ljmp	__sdcc_program_startup
 ;--------------------------------------------------------
@@ -638,7 +637,7 @@ __sdcc_program_startup:
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'DeviceUSBInterrupt'
 ;------------------------------------------------------------
-;	App/main.c:21: void DeviceUSBInterrupt(void) __interrupt (INT_NO_USB)                       //USB interrupt service
+;	App/test_w25qxx.c:19: void DeviceUSBInterrupt(void) __interrupt (INT_NO_USB)                       //USB interrupt service
 ;	-----------------------------------------
 ;	 function DeviceUSBInterrupt
 ;	-----------------------------------------
@@ -666,9 +665,9 @@ _DeviceUSBInterrupt:
 	push	(0+0)
 	push	psw
 	mov	psw,#0x00
-;	App/main.c:23: USBInterrupt();
+;	App/test_w25qxx.c:21: USBInterrupt();
 	lcall	_USBInterrupt
-;	App/main.c:24: }
+;	App/test_w25qxx.c:22: }
 	pop	psw
 	pop	(0+0)
 	pop	(0+1)
@@ -690,205 +689,110 @@ _DeviceUSBInterrupt:
 ;times                     Allocated to registers r7 
 ;i                         Allocated to registers r6 
 ;------------------------------------------------------------
-;	App/main.c:27: void blink(uint8_t times) {
+;	App/test_w25qxx.c:24: void blink(uint8_t times) {
 ;	-----------------------------------------
 ;	 function blink
 ;	-----------------------------------------
 _blink:
 	mov	r7,dpl
-;	App/main.c:29: for (uint8_t i = 0; i<times; i++) {
+;	App/test_w25qxx.c:26: for (uint8_t i = 0; i<times; i++) {
 	mov	r6,#0x00
 00103$:
 	clr	c
 	mov	a,r6
 	subb	a,r7
 	jnc	00101$
-;	App/main.c:30: LED = 1;
+;	App/test_w25qxx.c:27: LED = 1;
 ;	assignBit
 	setb	_LED
-;	App/main.c:31: mDelaymS(250);
+;	App/test_w25qxx.c:28: mDelaymS(250);
 	mov	dptr,#0x00fa
 	push	ar7
 	push	ar6
 	lcall	_mDelaymS
-;	App/main.c:32: LED = 0;
+;	App/test_w25qxx.c:29: LED = 0;
 ;	assignBit
 	clr	_LED
-;	App/main.c:33: mDelaymS(250);
+;	App/test_w25qxx.c:30: mDelaymS(250);
 	mov	dptr,#0x00fa
 	lcall	_mDelaymS
 	pop	ar6
 	pop	ar7
-;	App/main.c:29: for (uint8_t i = 0; i<times; i++) {
+;	App/test_w25qxx.c:26: for (uint8_t i = 0; i<times; i++) {
 	inc	r6
 	sjmp	00103$
 00101$:
-;	App/main.c:36: mDelaymS(1000);
+;	App/test_w25qxx.c:33: mDelaymS(1000);
 	mov	dptr,#0x03e8
-;	App/main.c:37: }
+;	App/test_w25qxx.c:34: }
 	ljmp	_mDelaymS
 ;------------------------------------------------------------
-;Allocation info for local variables in function 'main'
+;Allocation info for local variables in function 'testReadDeviceId'
 ;------------------------------------------------------------
-;serialChar                Allocated to registers r7 
-;i                         Allocated with name '_main_i_393216_141'
-;mac                       Allocated to registers r5 r6 r7 
-;j                         Allocated to registers r4 
+;devId                     Allocated to registers r6 r7 
 ;------------------------------------------------------------
-;	App/main.c:40: void main()
+;	App/test_w25qxx.c:37: void testReadDeviceId() {
 ;	-----------------------------------------
-;	 function main
+;	 function testReadDeviceId
 ;	-----------------------------------------
-_main:
-;	App/main.c:42: CfgFsys(); 
-	lcall	_CfgFsys
-;	App/main.c:43: LED = 0;
-;	assignBit
-	clr	_LED
-;	App/main.c:44: mDelaymS(10);
-	mov	dptr,#0x000a
-	lcall	_mDelaymS
-;	App/main.c:46: USBInit();
-	lcall	_USBInit
-;	App/main.c:47: USBSerial();
-	lcall	_USBSerial
-;	App/main.c:48: SPISetup();
-	lcall	_SPISetup
-;	App/main.c:50: blink(3);
-	mov	dpl,#0x03
-	lcall	_blink
-00123$:
-;	App/main.c:55: if (USBSerial_available()) {
-	lcall	_USBSerial_available
-	mov	a,dpl
-	jnz	00169$
-	ljmp	00115$
-00169$:
-;	App/main.c:57: uint8_t serialChar = USBSerial_read();
-	lcall	_USBSerial_read
-	mov	r7,dpl
-;	App/main.c:60: if (serialChar == 'a') {
-	cjne	r7,#0x61,00112$
-;	App/main.c:61: printText("Hello world\n");
+_testReadDeviceId:
+;	App/test_w25qxx.c:40: printText("Device Id:");
 	mov	dptr,#___str_0
 	mov	b,#0x80
 	lcall	_printText
-	ljmp	00115$
-00112$:
-;	App/main.c:63: } else if (serialChar == 'b') {
-	cjne	r7,#0x62,00109$
-;	App/main.c:65: printText("Device Id:");
+;	App/test_w25qxx.c:41: uint16_t devId = readDeviceId();
+	lcall	_readDeviceId
+	mov	r6,dpl
+	mov	r7,dph
+;	App/test_w25qxx.c:42: printNumbers(devId, HEX);
+	mov	r5,#0x00
+	mov	r4,#0x00
+	mov	dptr,#_printNumbers_PARM_2
+	mov	a,#0x10
+	movx	@dptr,a
+	mov	dpl,r6
+	mov	dph,r7
+	mov	b,r5
+	mov	a,r4
+	lcall	_printNumbers
+;	App/test_w25qxx.c:43: printText("\nEnd\n");
 	mov	dptr,#___str_1
 	mov	b,#0x80
 	lcall	_printText
-;	App/main.c:67: devId = readDeviceId();
-	lcall	_readDeviceId
-	mov	_devId,dpl
-	mov	(_devId + 1),dph
-;	App/main.c:69: printNumbers(devId, HEX);
-	mov	r3,_devId
-	mov	r4,(_devId + 1)
-	mov	r5,#0x00
-	mov	r6,#0x00
-	mov	dptr,#_printNumbers_PARM_2
-	mov	a,#0x10
-	movx	@dptr,a
-	mov	dpl,r3
-	mov	dph,r4
-	mov	b,r5
-	mov	a,r6
-	lcall	_printNumbers
-	ljmp	00115$
-00109$:
-;	App/main.c:72: } else if (serialChar == 'c') {
-	cjne	r7,#0x63,00174$
-	sjmp	00175$
-00174$:
-	sjmp	00106$
-00175$:
-;	App/main.c:74: printText("Reading page...\n");
+;	App/test_w25qxx.c:45: mDelaymS(1000);
+	mov	dptr,#0x03e8
+	lcall	_mDelaymS
+;	App/test_w25qxx.c:46: blink(2);
+	mov	dpl,#0x02
+;	App/test_w25qxx.c:48: }
+	ljmp	_blink
+;------------------------------------------------------------
+;Allocation info for local variables in function 'testReadUniqueId'
+;------------------------------------------------------------
+;mac                       Allocated to registers r5 r6 r7 
+;j                         Allocated to registers r4 
+;------------------------------------------------------------
+;	App/test_w25qxx.c:50: void testReadUniqueId() {
+;	-----------------------------------------
+;	 function testReadUniqueId
+;	-----------------------------------------
+_testReadUniqueId:
+;	App/test_w25qxx.c:52: printText("Unique Id:\n");
 	mov	dptr,#___str_2
 	mov	b,#0x80
 	lcall	_printText
-;	App/main.c:76: for (uint32_t i=0; i<16; i++) {  
-	clr	a
-	mov	_main_i_393216_141,a
-	mov	(_main_i_393216_141 + 1),a
-	mov	(_main_i_393216_141 + 2),a
-	mov	(_main_i_393216_141 + 3),a
-00118$:
-	clr	c
-	mov	a,_main_i_393216_141
-	subb	a,#0x10
-	mov	a,(_main_i_393216_141 + 1)
-	subb	a,#0x00
-	mov	a,(_main_i_393216_141 + 2)
-	subb	a,#0x00
-	mov	a,(_main_i_393216_141 + 3)
-	subb	a,#0x00
-	jnc	00101$
-;	App/main.c:77: printNumbers(readByte(i), HEX);
-	mov	dpl,_main_i_393216_141
-	mov	dph,(_main_i_393216_141 + 1)
-	mov	b,(_main_i_393216_141 + 2)
-	mov	a,(_main_i_393216_141 + 3)
-	lcall	_readByte
-	mov	r2,dpl
-	mov	ar0,r2
-	mov	r1,#0x00
-	mov	r2,#0x00
-	mov	r6,#0x00
-	mov	dptr,#_printNumbers_PARM_2
-	mov	a,#0x10
-	movx	@dptr,a
-	mov	dpl,r0
-	mov	dph,r1
-	mov	b,r2
-	mov	a,r6
-	lcall	_printNumbers
-;	App/main.c:78: printText(".");
-	mov	dptr,#___str_3
-	mov	b,#0x80
-	lcall	_printText
-;	App/main.c:79: mDelaymS(2);
-	mov	dptr,#0x0002
-	lcall	_mDelaymS
-;	App/main.c:76: for (uint32_t i=0; i<16; i++) {  
-	inc	_main_i_393216_141
-	clr	a
-	cjne	a,_main_i_393216_141,00177$
-	inc	(_main_i_393216_141 + 1)
-	cjne	a,(_main_i_393216_141 + 1),00177$
-	inc	(_main_i_393216_141 + 2)
-	cjne	a,(_main_i_393216_141 + 2),00118$
-	inc	(_main_i_393216_141 + 3)
-00177$:
-	sjmp	00118$
-00101$:
-;	App/main.c:82: printText("\nEnd\n");
-	mov	dptr,#___str_4
-	mov	b,#0x80
-	lcall	_printText
-	sjmp	00115$
-00106$:
-;	App/main.c:84: } else if (serialChar == 'd') {
-	cjne	r7,#0x64,00115$
-;	App/main.c:89: printText("Unique Id:\n");
-	mov	dptr,#___str_5
-	mov	b,#0x80
-	lcall	_printText
-;	App/main.c:91: uint8_t *mac = readUniqueId();
+;	App/test_w25qxx.c:53: uint8_t *mac = readUniqueId();
 	lcall	_readUniqueId
 	mov	r5,dpl
 	mov	r6,dph
 	mov	r7,b
-;	App/main.c:93: for (uint8_t j=0; j<8; j++) {
+;	App/test_w25qxx.c:55: for (uint8_t j=0; j<8; j++) {
 	mov	r4,#0x00
-00121$:
-	cjne	r4,#0x08,00180$
-00180$:
-	jnc	00102$
-;	App/main.c:94: printNumbers(mac[j], HEX); 
+00103$:
+	cjne	r4,#0x08,00116$
+00116$:
+	jnc	00101$
+;	App/test_w25qxx.c:56: printNumbers(mac[j], HEX); 
 	mov	a,r4
 	add	a,r5
 	mov	r1,a
@@ -916,7 +820,7 @@ _main:
 	push	ar5
 	push	ar4
 	lcall	_printNumbers
-;	App/main.c:95: printText("."); 
+;	App/test_w25qxx.c:57: printText("."); 
 	mov	dptr,#___str_3
 	mov	b,#0x80
 	lcall	_printText
@@ -924,41 +828,397 @@ _main:
 	pop	ar5
 	pop	ar6
 	pop	ar7
-;	App/main.c:93: for (uint8_t j=0; j<8; j++) {
+;	App/test_w25qxx.c:55: for (uint8_t j=0; j<8; j++) {
 	inc	r4
-	sjmp	00121$
-00102$:
-;	App/main.c:97: printText("\nEnd\n");
+	sjmp	00103$
+00101$:
+;	App/test_w25qxx.c:59: printText("\nEnd\n");
+	mov	dptr,#___str_1
+	mov	b,#0x80
+	lcall	_printText
+;	App/test_w25qxx.c:61: mDelaymS(1000);
+	mov	dptr,#0x03e8
+	lcall	_mDelaymS
+;	App/test_w25qxx.c:62: blink(2);
+	mov	dpl,#0x02
+;	App/test_w25qxx.c:64: }
+	ljmp	_blink
+;------------------------------------------------------------
+;Allocation info for local variables in function 'testReadByte'
+;------------------------------------------------------------
+;p                         Allocated with name '_testReadByte_p_131072_149'
+;i                         Allocated to registers r3 r4 r5 r6 
+;------------------------------------------------------------
+;	App/test_w25qxx.c:66: void testReadByte() {
+;	-----------------------------------------
+;	 function testReadByte
+;	-----------------------------------------
+_testReadByte:
+;	App/test_w25qxx.c:69: printText("Reading byte...");
 	mov	dptr,#___str_4
 	mov	b,#0x80
 	lcall	_printText
-00115$:
-;	App/main.c:100: LED = 0;
-;	assignBit
-	clr	_LED
-;	App/main.c:101: USBSerial_flush();
-	lcall	_USBSerial_flush
-;	App/main.c:102: mDelaymS(10);
+;	App/test_w25qxx.c:72: for (uint8_t p=0; p<8; p++) {
+	mov	_testReadByte_p_131072_149,#0x00
+00107$:
+	mov	a,#0x100 - 0x08
+	add	a,_testReadByte_p_131072_149
+	jnc	00129$
+	ljmp	00102$
+00129$:
+;	App/test_w25qxx.c:73: printText("\nPage: ");
+	mov	dptr,#___str_5
+	mov	b,#0x80
+	lcall	_printText
+;	App/test_w25qxx.c:74: printNumbers(p, DEC);
+	mov	r3,_testReadByte_p_131072_149
+	mov	r4,#0x00
+	mov	r5,#0x00
+	mov	r6,#0x00
+	mov	dptr,#_printNumbers_PARM_2
+	mov	a,#0x0a
+	movx	@dptr,a
+	mov	dpl,r3
+	mov	dph,r4
+	mov	b,r5
+	mov	a,r6
+	lcall	_printNumbers
+;	App/test_w25qxx.c:75: printText("\n");
+	mov	dptr,#___str_6
+	mov	b,#0x80
+	lcall	_printText
+;	App/test_w25qxx.c:77: for (uint32_t i=0; i<32; i++) {  
+	mov	r3,#0x00
+	mov	r4,#0x00
+	mov	r5,#0x00
+	mov	r6,#0x00
+00104$:
+	clr	c
+	mov	a,r3
+	subb	a,#0x20
+	mov	a,r4
+	subb	a,#0x00
+	mov	a,r5
+	subb	a,#0x00
+	mov	a,r6
+	subb	a,#0x00
+	jnc	00108$
+;	App/test_w25qxx.c:78: printNumbers(readByte((p*256)+i), HEX);
+	mov	r2,_testReadByte_p_131072_149
+	mov	r1,#0x00
+	mov	a,r2
+	mov	r0,a
+	rlc	a
+	subb	a,acc
+	mov	r2,a
+	mov	r7,a
+	mov	a,r3
+	add	a,r1
+	mov	r1,a
+	mov	a,r4
+	addc	a,r0
+	mov	r0,a
+	mov	a,r5
+	addc	a,r2
+	mov	r2,a
+	mov	a,r6
+	addc	a,r7
+	mov	dpl,r1
+	mov	dph,r0
+	mov	b,r2
+	push	ar6
+	push	ar5
+	push	ar4
+	push	ar3
+	lcall	_readByte
+	mov	r7,dpl
+	mov	ar0,r7
+	mov	r1,#0x00
+	mov	r2,#0x00
+	mov	r7,#0x00
+	mov	dptr,#_printNumbers_PARM_2
+	mov	a,#0x10
+	movx	@dptr,a
+	mov	dpl,r0
+	mov	dph,r1
+	mov	b,r2
+	mov	a,r7
+	lcall	_printNumbers
+;	App/test_w25qxx.c:79: printText(".");
+	mov	dptr,#___str_3
+	mov	b,#0x80
+	lcall	_printText
+	pop	ar3
+	pop	ar4
+	pop	ar5
+	pop	ar6
+;	App/test_w25qxx.c:77: for (uint32_t i=0; i<32; i++) {  
+	inc	r3
+	cjne	r3,#0x00,00131$
+	inc	r4
+	cjne	r4,#0x00,00131$
+	inc	r5
+	cjne	r5,#0x00,00104$
+	inc	r6
+00131$:
+	sjmp	00104$
+00108$:
+;	App/test_w25qxx.c:72: for (uint8_t p=0; p<8; p++) {
+	inc	_testReadByte_p_131072_149
+	ljmp	00107$
+00102$:
+;	App/test_w25qxx.c:83: printText("\nEnd\n");
+	mov	dptr,#___str_1
+	mov	b,#0x80
+	lcall	_printText
+;	App/test_w25qxx.c:85: mDelaymS(1000);
+	mov	dptr,#0x03e8
+	lcall	_mDelaymS
+;	App/test_w25qxx.c:86: blink(2);
+	mov	dpl,#0x02
+;	App/test_w25qxx.c:88: }
+	ljmp	_blink
+;------------------------------------------------------------
+;Allocation info for local variables in function 'testReadBytes'
+;------------------------------------------------------------
+;j                         Allocated to registers r7 
+;z                         Allocated to registers r6 
+;------------------------------------------------------------
+;	App/test_w25qxx.c:90: void testReadBytes() {
+;	-----------------------------------------
+;	 function testReadBytes
+;	-----------------------------------------
+_testReadBytes:
+;	App/test_w25qxx.c:94: printText("Reading to array of bytes...");
+	mov	dptr,#___str_7
+	mov	b,#0x80
+	lcall	_printText
+;	App/test_w25qxx.c:96: for (uint8_t j=0; j<8; j++) {
+	mov	r7,#0x00
+00107$:
+	cjne	r7,#0x08,00129$
+00129$:
+	jc	00130$
+	ljmp	00102$
+00130$:
+;	App/test_w25qxx.c:98: printText("\nPage: ");    
+	mov	dptr,#___str_5
+	mov	b,#0x80
+	push	ar7
+	lcall	_printText
+	pop	ar7
+;	App/test_w25qxx.c:99: printNumbers(j, DEC);
+	mov	ar3,r7
+	mov	r4,#0x00
+	mov	r5,#0x00
+	mov	r6,#0x00
+	mov	dptr,#_printNumbers_PARM_2
+	mov	a,#0x0a
+	movx	@dptr,a
+	mov	dpl,r3
+	mov	dph,r4
+	mov	b,r5
+	mov	a,r6
+	push	ar7
+	lcall	_printNumbers
+;	App/test_w25qxx.c:100: printText("\n");
+	mov	dptr,#___str_6
+	mov	b,#0x80
+	lcall	_printText
+	pop	ar7
+;	App/test_w25qxx.c:102: readBytes((j*256), _sbuffer, 31);
+	mov	ar5,r7
+	mov	ar6,r5
+	mov	r5,#0x00
+	mov	a,r6
+	rlc	a
+	subb	a,acc
+	mov	r4,a
+	mov	r3,a
+	mov	_readBytes_PARM_2,#__sbuffer
+	mov	(_readBytes_PARM_2 + 1),#(__sbuffer >> 8)
+;	1-genFromRTrack replaced	mov	(_readBytes_PARM_2 + 2),#0x00
+	mov	(_readBytes_PARM_2 + 2),r5
+	mov	_readBytes_PARM_3,#0x1f
+;	1-genFromRTrack replaced	mov	(_readBytes_PARM_3 + 1),#0x00
+	mov	(_readBytes_PARM_3 + 1),r5
+	mov	dpl,r5
+	mov	dph,r6
+	mov	b,r4
+	mov	a,r3
+	push	ar7
+	lcall	_readBytes
+	pop	ar7
+;	App/test_w25qxx.c:104: for (uint8_t z=0; z<32; z++) {
+	mov	r6,#0x00
+00104$:
+	cjne	r6,#0x20,00131$
+00131$:
+	jnc	00108$
+;	App/test_w25qxx.c:105: printNumbers(_sbuffer[z], HEX);
+	mov	a,r6
+	add	a,#__sbuffer
+	mov	dpl,a
+	clr	a
+	addc	a,#(__sbuffer >> 8)
+	mov	dph,a
+	movx	a,@dptr
+	mov	r5,a
+	mov	r4,#0x00
+	mov	r3,#0x00
+	mov	r2,#0x00
+	mov	dptr,#_printNumbers_PARM_2
+	mov	a,#0x10
+	movx	@dptr,a
+	mov	dpl,r5
+	mov	dph,r4
+	mov	b,r3
+	mov	a,r2
+	push	ar7
+	push	ar6
+	lcall	_printNumbers
+;	App/test_w25qxx.c:106: printText(".");    
+	mov	dptr,#___str_3
+	mov	b,#0x80
+	lcall	_printText
+	pop	ar6
+	pop	ar7
+;	App/test_w25qxx.c:104: for (uint8_t z=0; z<32; z++) {
+	inc	r6
+	sjmp	00104$
+00108$:
+;	App/test_w25qxx.c:96: for (uint8_t j=0; j<8; j++) {
+	inc	r7
+	ljmp	00107$
+00102$:
+;	App/test_w25qxx.c:109: printText("\n");
+	mov	dptr,#___str_6
+	mov	b,#0x80
+	lcall	_printText
+;	App/test_w25qxx.c:111: mDelaymS(1000);
+	mov	dptr,#0x03e8
+	lcall	_mDelaymS
+;	App/test_w25qxx.c:112: blink(2);
+	mov	dpl,#0x02
+;	App/test_w25qxx.c:113: }
+	ljmp	_blink
+;------------------------------------------------------------
+;Allocation info for local variables in function 'testReadStatus'
+;------------------------------------------------------------
+;	App/test_w25qxx.c:115: void testReadStatus() {
+;	-----------------------------------------
+;	 function testReadStatus
+;	-----------------------------------------
+_testReadStatus:
+;	App/test_w25qxx.c:116: printText("Status: ");
+	mov	dptr,#___str_8
+	mov	b,#0x80
+	lcall	_printText
+;	App/test_w25qxx.c:117: printNumbers(readStatus(), DEC);
+	lcall	_readStatus
+	mov	r7,dpl
+	mov	r6,#0x00
+	mov	r5,#0x00
+	mov	r4,#0x00
+	mov	dptr,#_printNumbers_PARM_2
+	mov	a,#0x0a
+	movx	@dptr,a
+	mov	dpl,r7
+	mov	dph,r6
+	mov	b,r5
+	mov	a,r4
+	lcall	_printNumbers
+;	App/test_w25qxx.c:118: printText("\n");
+	mov	dptr,#___str_6
+	mov	b,#0x80
+	lcall	_printText
+;	App/test_w25qxx.c:120: mDelaymS(1000);
+	mov	dptr,#0x03e8
+	lcall	_mDelaymS
+;	App/test_w25qxx.c:121: blink(2);
+	mov	dpl,#0x02
+;	App/test_w25qxx.c:122: }
+	ljmp	_blink
+;------------------------------------------------------------
+;Allocation info for local variables in function 'testChipErase'
+;------------------------------------------------------------
+;	App/test_w25qxx.c:125: void testChipErase() {
+;	-----------------------------------------
+;	 function testChipErase
+;	-----------------------------------------
+_testChipErase:
+;	App/test_w25qxx.c:126: printText("Erasing chip... ");
+	mov	dptr,#___str_9
+	mov	b,#0x80
+	lcall	_printText
+;	App/test_w25qxx.c:127: chipErase();
+	lcall	_chipErase
+;	App/test_w25qxx.c:128: printText("Done! \n");
+	mov	dptr,#___str_10
+	mov	b,#0x80
+	lcall	_printText
+;	App/test_w25qxx.c:130: mDelaymS(1000);
+	mov	dptr,#0x03e8
+	lcall	_mDelaymS
+;	App/test_w25qxx.c:131: blink(2);
+	mov	dpl,#0x02
+;	App/test_w25qxx.c:133: }
+	ljmp	_blink
+;------------------------------------------------------------
+;Allocation info for local variables in function 'main'
+;------------------------------------------------------------
+;	App/test_w25qxx.c:136: void main()
+;	-----------------------------------------
+;	 function main
+;	-----------------------------------------
+_main:
+;	App/test_w25qxx.c:138: CfgFsys(); 
+	lcall	_CfgFsys
+;	App/test_w25qxx.c:139: mDelaymS(10);
 	mov	dptr,#0x000a
 	lcall	_mDelaymS
-;	App/main.c:104: }
-	ljmp	00123$
+;	App/test_w25qxx.c:141: USBInit();
+	lcall	_USBInit
+;	App/test_w25qxx.c:142: USBSerial();
+	lcall	_USBSerial
+;	App/test_w25qxx.c:143: SPISetup();
+	lcall	_SPISetup
+;	App/test_w25qxx.c:146: blink(3);
+	mov	dpl,#0x03
+	lcall	_blink
+;	App/test_w25qxx.c:148: mDelaymS(1000);
+	mov	dptr,#0x03e8
+	lcall	_mDelaymS
+;	App/test_w25qxx.c:150: while(1) {
+00102$:
+;	App/test_w25qxx.c:160: testReadBytes();
+	lcall	_testReadBytes
+;	App/test_w25qxx.c:161: testChipErase();
+	lcall	_testChipErase
+;	App/test_w25qxx.c:162: testReadBytes();
+	lcall	_testReadBytes
+;	App/test_w25qxx.c:166: mDelaymS(2000);
+	mov	dptr,#0x07d0
+	lcall	_mDelaymS
+;	App/test_w25qxx.c:173: }
+	sjmp	00102$
 	.area CSEG    (CODE)
 	.area CONST   (CODE)
 	.area CONST   (CODE)
 ___str_0:
-	.ascii "Hello world"
-	.db 0x0a
-	.db 0x00
-	.area CSEG    (CODE)
-	.area CONST   (CODE)
-___str_1:
 	.ascii "Device Id:"
 	.db 0x00
 	.area CSEG    (CODE)
 	.area CONST   (CODE)
+___str_1:
+	.db 0x0a
+	.ascii "End"
+	.db 0x0a
+	.db 0x00
+	.area CSEG    (CODE)
+	.area CONST   (CODE)
 ___str_2:
-	.ascii "Reading page..."
+	.ascii "Unique Id:"
 	.db 0x0a
 	.db 0x00
 	.area CSEG    (CODE)
@@ -969,16 +1229,49 @@ ___str_3:
 	.area CSEG    (CODE)
 	.area CONST   (CODE)
 ___str_4:
-	.db 0x0a
-	.ascii "End"
-	.db 0x0a
+	.ascii "Reading byte..."
 	.db 0x00
 	.area CSEG    (CODE)
 	.area CONST   (CODE)
 ___str_5:
-	.ascii "Unique Id:"
+	.db 0x0a
+	.ascii "Page: "
+	.db 0x00
+	.area CSEG    (CODE)
+	.area CONST   (CODE)
+___str_6:
+	.db 0x0a
+	.db 0x00
+	.area CSEG    (CODE)
+	.area CONST   (CODE)
+___str_7:
+	.ascii "Reading to array of bytes..."
+	.db 0x00
+	.area CSEG    (CODE)
+	.area CONST   (CODE)
+___str_8:
+	.ascii "Status: "
+	.db 0x00
+	.area CSEG    (CODE)
+	.area CONST   (CODE)
+___str_9:
+	.ascii "Erasing chip... "
+	.db 0x00
+	.area CSEG    (CODE)
+	.area CONST   (CODE)
+___str_10:
+	.ascii "Done! "
 	.db 0x0a
 	.db 0x00
 	.area CSEG    (CODE)
 	.area XINIT   (CODE)
+__xinit__UNIQUEID:
+	.db #0x00	; 0
+	.db 0x00
+	.db 0x00
+	.db 0x00
+	.db 0x00
+	.db 0x00
+	.db 0x00
+	.db 0x00
 	.area CABS    (ABS,CODE)

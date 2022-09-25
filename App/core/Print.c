@@ -12,6 +12,18 @@ uint8_t printText(char * __xdata str)
         if (USBSerial_write(c)) n++;
         else break;
     }
+
+    USBSerial_flush();
+    return n;
+}
+
+uint8_t printTextArray(uint8_t * __xdata buffer, __xdata uint8_t size)
+{
+    uint8_t n = 0;
+    while (size--) {
+        if (USBSerial_write(*buffer++)) n++;
+        else break;
+    }
     return n;
 }
 

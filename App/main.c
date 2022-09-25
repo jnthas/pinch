@@ -14,8 +14,6 @@
 #define LED_PIN 0
 SBIT(LED, 0xB0, LED_PIN);
 
-uint16_t devId = 0;
-
 void USBInterrupt(void); //USBInterrupt does not need to saves the context
 
 void DeviceUSBInterrupt(void) __interrupt (INT_NO_USB)                       //USB interrupt service
@@ -64,7 +62,8 @@ void main()
 
                 printText("Device Id:");
 
-                devId = readDeviceId();
+                
+                uint16_t devId = readDeviceId();
                 
                 printNumbers(devId, HEX);
                 
@@ -72,11 +71,20 @@ void main()
             } else if (serialChar == 'c') {
                 
                 printText("Reading page...\n");
+               
+                     
+                for (uint8_t p=0; p<8; p++) {
+                    printText("\n");
+                    printText("Page: ");
+                    printNumbers(p, DEC);
+                    printText("\n");
+                    
+                    for (uint32_t i=0; i<32; i++) {  
+                        printNumbers(readByte((p*256)+i), HEX);
+                        printText(".");
+                        //mDelaymS(2);
+                    }
 
-                for (uint32_t i=0; i<16; i++) {  
-                    printNumbers(readByte(i), HEX);
-                    printText(".");
-                    mDelaymS(2);
                 }
 
                 printText("\nEnd\n");

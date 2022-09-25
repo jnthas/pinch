@@ -9,6 +9,7 @@
 ; Public variables in this module
 ;--------------------------------------------------------
 	.globl _USBSerial_write
+	.globl _USBSerial_flush
 	.globl _UIF_BUS_RST
 	.globl _UIF_TRANSFER
 	.globl _UIF_SUSPEND
@@ -242,7 +243,9 @@
 	.globl _ACC
 	.globl _PSW
 	.globl _printNumbers_PARM_2
+	.globl _printTextArray_PARM_2
 	.globl _printText
+	.globl _printTextArray
 	.globl _printNumbers
 ;--------------------------------------------------------
 ; special function registers
@@ -525,13 +528,17 @@ _printNumbers_sloc2_1_0:
 ; external ram data
 ;--------------------------------------------------------
 	.area XSEG    (XDATA)
-_printText_str_65536_9:
+_printText_str_65536_11:
+	.ds 3
+_printTextArray_PARM_2:
+	.ds 1
+_printTextArray_buffer_65536_14:
 	.ds 3
 _printNumbers_PARM_2:
 	.ds 1
-_printNumbers_n_65536_12:
+_printNumbers_n_65536_17:
 	.ds 4
-_printNumbers_buf_65536_13:
+_printNumbers_buf_65536_18:
 	.ds 33
 ;--------------------------------------------------------
 ; absolute external ram data
@@ -572,7 +579,7 @@ _printNumbers_buf_65536_13:
 ;------------------------------------------------------------
 ;n                         Allocated to registers r4 
 ;c                         Allocated to registers r2 
-;str                       Allocated with name '_printText_str_65536_9'
+;str                       Allocated with name '_printText_str_65536_11'
 ;------------------------------------------------------------
 ;	App/core/Print.c:4: uint8_t printText(char * __xdata str)
 ;	-----------------------------------------
@@ -590,7 +597,7 @@ _printText:
 	mov	r7,b
 	mov	r6,dph
 	mov	a,dpl
-	mov	dptr,#_printText_str_65536_9
+	mov	dptr,#_printText_str_65536_11
 	movx	@dptr,a
 	mov	a,r6
 	inc	dptr
@@ -599,7 +606,7 @@ _printText:
 	inc	dptr
 	movx	@dptr,a
 ;	App/core/Print.c:9: if (!str) return 0;
-	mov	dptr,#_printText_str_65536_9
+	mov	dptr,#_printText_str_65536_11
 	movx	a,@dptr
 	mov	r5,a
 	inc	dptr
@@ -608,7 +615,7 @@ _printText:
 	inc	dptr
 	movx	a,@dptr
 	mov	r7,a
-	mov	dptr,#_printText_str_65536_9
+	mov	dptr,#_printText_str_65536_11
 	movx	a,@dptr
 	mov	b,a
 	inc	dptr
@@ -629,7 +636,7 @@ _printText:
 	inc	dptr
 	mov	r5,dpl
 	mov	r6,dph
-	mov	dptr,#_printText_str_65536_9
+	mov	dptr,#_printText_str_65536_11
 	mov	a,r5
 	movx	@dptr,a
 	mov	a,r6
@@ -658,7 +665,7 @@ _printText:
 ;	App/core/Print.c:13: else break;
 	sjmp	00106$
 00115$:
-	mov	dptr,#_printText_str_65536_9
+	mov	dptr,#_printText_str_65536_11
 	mov	a,r5
 	movx	@dptr,a
 	mov	a,r6
@@ -667,9 +674,104 @@ _printText:
 	mov	a,r7
 	inc	dptr
 	movx	@dptr,a
-;	App/core/Print.c:15: return n;
+;	App/core/Print.c:16: USBSerial_flush();
+	push	ar4
+	lcall	_USBSerial_flush
+	pop	ar4
+;	App/core/Print.c:17: return n;
 	mov	dpl,r4
-;	App/core/Print.c:16: }
+;	App/core/Print.c:18: }
+	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'printTextArray'
+;------------------------------------------------------------
+;n                         Allocated to registers r4 
+;size                      Allocated with name '_printTextArray_PARM_2'
+;buffer                    Allocated with name '_printTextArray_buffer_65536_14'
+;------------------------------------------------------------
+;	App/core/Print.c:20: uint8_t printTextArray(uint8_t * __xdata buffer, __xdata uint8_t size)
+;	-----------------------------------------
+;	 function printTextArray
+;	-----------------------------------------
+_printTextArray:
+	mov	r7,b
+	mov	r6,dph
+	mov	a,dpl
+	mov	dptr,#_printTextArray_buffer_65536_14
+	movx	@dptr,a
+	mov	a,r6
+	inc	dptr
+	movx	@dptr,a
+	mov	a,r7
+	inc	dptr
+	movx	@dptr,a
+;	App/core/Print.c:23: while (size--) {
+	mov	dptr,#_printTextArray_buffer_65536_14
+	movx	a,@dptr
+	mov	r5,a
+	inc	dptr
+	movx	a,@dptr
+	mov	r6,a
+	inc	dptr
+	movx	a,@dptr
+	mov	r7,a
+	mov	r4,#0x00
+	mov	dptr,#_printTextArray_PARM_2
+	movx	a,@dptr
+	mov	r3,a
+00104$:
+	mov	ar2,r3
+	dec	r3
+	mov	a,r2
+	jz	00112$
+;	App/core/Print.c:24: if (USBSerial_write(*buffer++)) n++;
+	mov	dpl,r5
+	mov	dph,r6
+	mov	b,r7
+	lcall	__gptrget
+	mov	r2,a
+	inc	dptr
+	mov	r5,dpl
+	mov	r6,dph
+	mov	dptr,#_printTextArray_buffer_65536_14
+	mov	a,r5
+	movx	@dptr,a
+	mov	a,r6
+	inc	dptr
+	movx	@dptr,a
+	mov	a,r7
+	inc	dptr
+	movx	@dptr,a
+	mov	dpl,r2
+	push	ar7
+	push	ar6
+	push	ar5
+	push	ar4
+	push	ar3
+	lcall	_USBSerial_write
+	mov	a,dpl
+	pop	ar3
+	pop	ar4
+	pop	ar5
+	pop	ar6
+	pop	ar7
+	jz	00112$
+	inc	r4
+;	App/core/Print.c:25: else break;
+	sjmp	00104$
+00112$:
+	mov	dptr,#_printTextArray_buffer_65536_14
+	mov	a,r5
+	movx	@dptr,a
+	mov	a,r6
+	inc	dptr
+	movx	@dptr,a
+	mov	a,r7
+	inc	dptr
+	movx	@dptr,a
+;	App/core/Print.c:27: return n;
+	mov	dpl,r4
+;	App/core/Print.c:28: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'printNumbers'
@@ -680,10 +782,10 @@ _printText:
 ;sloc1                     Allocated with name '_printNumbers_sloc1_1_0'
 ;sloc2                     Allocated with name '_printNumbers_sloc2_1_0'
 ;base                      Allocated with name '_printNumbers_PARM_2'
-;n                         Allocated with name '_printNumbers_n_65536_12'
-;buf                       Allocated with name '_printNumbers_buf_65536_13'
+;n                         Allocated with name '_printNumbers_n_65536_17'
+;buf                       Allocated with name '_printNumbers_buf_65536_18'
 ;------------------------------------------------------------
-;	App/core/Print.c:19: uint8_t printNumbers(__xdata unsigned long n, __xdata uint8_t base)
+;	App/core/Print.c:31: uint8_t printNumbers(__xdata unsigned long n, __xdata uint8_t base)
 ;	-----------------------------------------
 ;	 function printNumbers
 ;	-----------------------------------------
@@ -692,7 +794,7 @@ _printNumbers:
 	mov	r6,dph
 	mov	r5,b
 	mov	r4,a
-	mov	dptr,#_printNumbers_n_65536_12
+	mov	dptr,#_printNumbers_n_65536_17
 	mov	a,r7
 	movx	@dptr,a
 	mov	a,r6
@@ -704,12 +806,12 @@ _printNumbers:
 	mov	a,r4
 	inc	dptr
 	movx	@dptr,a
-;	App/core/Print.c:22: __xdata char *str = &buf[sizeof(buf) - 1];
-;	App/core/Print.c:24: *str = '\0';
-	mov	dptr,#(_printNumbers_buf_65536_13 + 0x0020)
+;	App/core/Print.c:34: __xdata char *str = &buf[sizeof(buf) - 1];
+;	App/core/Print.c:36: *str = '\0';
+	mov	dptr,#(_printNumbers_buf_65536_18 + 0x0020)
 	clr	a
 	movx	@dptr,a
-;	App/core/Print.c:27: if (base < 2) base = 10;
+;	App/core/Print.c:39: if (base < 2) base = 10;
 	mov	dptr,#_printNumbers_PARM_2
 	movx	a,@dptr
 	mov	r7,a
@@ -719,16 +821,16 @@ _printNumbers:
 	mov	dptr,#_printNumbers_PARM_2
 	mov	a,#0x0a
 	movx	@dptr,a
-;	App/core/Print.c:29: do {
+;	App/core/Print.c:41: do {
 00112$:
 	mov	dptr,#_printNumbers_PARM_2
 	movx	a,@dptr
 	mov	_printNumbers_sloc0_1_0,a
-	mov	r5,#(_printNumbers_buf_65536_13 + 0x0020)
-	mov	r6,#((_printNumbers_buf_65536_13 + 0x0020) >> 8)
+	mov	r5,#(_printNumbers_buf_65536_18 + 0x0020)
+	mov	r6,#((_printNumbers_buf_65536_18 + 0x0020) >> 8)
 00103$:
-;	App/core/Print.c:30: char c = n % base;
-	mov	dptr,#_printNumbers_n_65536_12
+;	App/core/Print.c:42: char c = n % base;
+	mov	dptr,#_printNumbers_n_65536_17
 	movx	a,@dptr
 	mov	_printNumbers_sloc1_1_0,a
 	inc	dptr
@@ -756,7 +858,7 @@ _printNumbers:
 	push	ar5
 	lcall	__modulong
 	mov	r1,dpl
-;	App/core/Print.c:31: n /= base;
+;	App/core/Print.c:43: n /= base;
 	mov	__divulong_PARM_2,_printNumbers_sloc2_1_0
 	mov	(__divulong_PARM_2 + 1),(_printNumbers_sloc2_1_0 + 1)
 	mov	(__divulong_PARM_2 + 2),(_printNumbers_sloc2_1_0 + 2)
@@ -774,7 +876,7 @@ _printNumbers:
 	pop	ar1
 	pop	ar5
 	pop	ar6
-	mov	dptr,#_printNumbers_n_65536_12
+	mov	dptr,#_printNumbers_n_65536_17
 	mov	a,r2
 	movx	@dptr,a
 	mov	a,r3
@@ -786,7 +888,7 @@ _printNumbers:
 	mov	a,r7
 	inc	dptr
 	movx	@dptr,a
-;	App/core/Print.c:33: *--str = c < 10 ? c + '0' : c + 'A' - 10;
+;	App/core/Print.c:45: *--str = c < 10 ? c + '0' : c + 'A' - 10;
 	dec	r5
 	cjne	r5,#0xff,00133$
 	dec	r6
@@ -810,8 +912,8 @@ _printNumbers:
 	mov	dph,r7
 	mov	a,r3
 	movx	@dptr,a
-;	App/core/Print.c:34: } while(n);
-	mov	dptr,#_printNumbers_n_65536_12
+;	App/core/Print.c:46: } while(n);
+	mov	dptr,#_printNumbers_n_65536_17
 	movx	a,@dptr
 	mov	b,a
 	inc	dptr
@@ -826,12 +928,12 @@ _printNumbers:
 	jz	00136$
 	ljmp	00103$
 00136$:
-;	App/core/Print.c:36: return printText(str);
+;	App/core/Print.c:48: return printText(str);
 	mov	r7,#0x00
 	mov	dpl,r5
 	mov	dph,r6
 	mov	b,r7
-;	App/core/Print.c:37: }
+;	App/core/Print.c:49: }
 	ljmp	_printText
 	.area CSEG    (CODE)
 	.area CONST   (CODE)

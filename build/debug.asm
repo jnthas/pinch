@@ -577,14 +577,6 @@ _CfgFsys:
 	ar2 = 0x02
 	ar1 = 0x01
 	ar0 = 0x00
-;	include/debug.c:27: SAFE_MOD = 0x55;
-	mov	_SAFE_MOD,#0x55
-;	include/debug.c:28: SAFE_MOD = 0xAA;
-	mov	_SAFE_MOD,#0xaa
-;	include/debug.c:29: CLOCK_CFG = CLOCK_CFG | bOSC_EN_XT;	  // Enable external crystal
-	orl	_CLOCK_CFG,#0x40
-;	include/debug.c:30: CLOCK_CFG = CLOCK_CFG & ~bOSC_EN_INT; // Turn off the internal crystal
-	anl	_CLOCK_CFG,#0x7f
 ;	include/debug.c:32: SAFE_MOD = 0x55;
 	mov	_SAFE_MOD,#0x55
 ;	include/debug.c:33: SAFE_MOD = 0xAA;

@@ -3,6 +3,7 @@
 #define __W25QXX_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "ch552.h"
 #include "debug.h"
 #include "spi.h"
@@ -31,7 +32,8 @@
 #define SPIFLASH_MACREAD          0x4B        // read unique ID number (MAC)
 
 
-static uint8_t UNIQUEID[8] = {0};
+static __xdata uint8_t UNIQUEID[8] = {0};
+static __xdata uint8_t _sbuffer[32];
 
 
 /* Hardware interface definition */
@@ -48,6 +50,18 @@ uint8_t readByte(uint32_t addr);
 uint16_t readDeviceId(void);
 void  SPISetup(void);
 uint8_t* readUniqueId();
+void readBytes(uint32_t addr, void* buf, uint16_t len);
+bool busy();
+uint8_t readStatus();
+void enableWrite();
+void writeByte(uint32_t addr, uint8_t byt);
+void writeBytes(uint32_t addr, const void* buf, uint16_t len);
+void chipErase();
+void blockErase4K(uint32_t addr);
+void blockErase32K(uint32_t addr);
+void blockErase64K(uint32_t addr);
+void sleep();
+void wakeup();
 
 
 #endif

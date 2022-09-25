@@ -247,10 +247,27 @@
 	.globl _B
 	.globl _ACC
 	.globl _PSW
-	.globl _readByte
+	.globl _writeBytes_PARM_3
+	.globl _writeBytes_PARM_2
+	.globl _writeByte_PARM_2
+	.globl _readBytes_PARM_3
+	.globl _readBytes_PARM_2
+	.globl _SPISetup
 	.globl _readDeviceId
 	.globl _readUniqueId
-	.globl _SPISetup
+	.globl _readByte
+	.globl _readBytes
+	.globl _readStatus
+	.globl _busy
+	.globl _enableWrite
+	.globl _writeByte
+	.globl _writeBytes
+	.globl _chipErase
+	.globl _blockErase4K
+	.globl _blockErase32K
+	.globl _blockErase64K
+	.globl _sleep
+	.globl _wakeup
 ;--------------------------------------------------------
 ; special function registers
 ;--------------------------------------------------------
@@ -502,12 +519,27 @@ _UIF_BUS_RST	=	0x00d8
 ; internal ram data
 ;--------------------------------------------------------
 	.area DSEG    (DATA)
-_UNIQUEID:
-	.ds 8
+_readBytes_PARM_2:
+	.ds 3
+_readBytes_PARM_3:
+	.ds 2
+_writeByte_PARM_2:
+	.ds 1
+_writeBytes_PARM_2:
+	.ds 3
+_writeBytes_PARM_3:
+	.ds 2
+_writeBytes_addr_65536_67:
+	.ds 4
+_writeBytes_n_65536_68:
+	.ds 2
+_writeBytes_maxBytes_65536_68:
+	.ds 2
+_writeBytes_offset_65536_68:
+	.ds 2
 ;--------------------------------------------------------
 ; overlayable items in internal ram 
 ;--------------------------------------------------------
-	.area	OSEG    (OVR,DATA)
 ;--------------------------------------------------------
 ; indirectly addressable internal ram data
 ;--------------------------------------------------------
@@ -529,6 +561,8 @@ _UNIQUEID:
 ; external ram data
 ;--------------------------------------------------------
 	.area XSEG    (XDATA)
+__sbuffer:
+	.ds 32
 ;--------------------------------------------------------
 ; absolute external ram data
 ;--------------------------------------------------------
@@ -537,6 +571,8 @@ _UNIQUEID:
 ; external initialized ram data
 ;--------------------------------------------------------
 	.area XISEG   (XDATA)
+_UNIQUEID:
+	.ds 8
 	.area HOME    (CODE)
 	.area GSINIT0 (CODE)
 	.area GSINIT1 (CODE)
@@ -554,8 +590,6 @@ _UNIQUEID:
 	.area GSINIT  (CODE)
 	.area GSFINAL (CODE)
 	.area GSINIT  (CODE)
-;	App/flash/w25qxx.h:34: static uint8_t UNIQUEID[8] = {0};
-	mov	_UNIQUEID,#0x00
 ;--------------------------------------------------------
 ; Home
 ;--------------------------------------------------------
@@ -566,13 +600,13 @@ _UNIQUEID:
 ;--------------------------------------------------------
 	.area CSEG    (CODE)
 ;------------------------------------------------------------
-;Allocation info for local variables in function 'select'
+;Allocation info for local variables in function 'SPISetup'
 ;------------------------------------------------------------
-;	App/flash/w25qxx.c:4: void select() {
+;	App/flash/w25qxx.c:4: void SPISetup()
 ;	-----------------------------------------
-;	 function select
+;	 function SPISetup
 ;	-----------------------------------------
-_select:
+_SPISetup:
 	ar7 = 0x07
 	ar6 = 0x06
 	ar5 = 0x05
@@ -581,123 +615,94 @@ _select:
 	ar2 = 0x02
 	ar1 = 0x01
 	ar0 = 0x00
-;	App/flash/w25qxx.c:5: SCS = 0;
+;	App/flash/w25qxx.c:6: SPIMasterModeSet(3); // SPI master mode setting, mode 3
+	mov	dpl,#0x03
+	lcall	_SPIMasterModeSet
+;	App/flash/w25qxx.c:7: SPI_CK_SET(2);       // divide by 2, fastest
+	mov	_SPI0_CK_SE,#0x02
+;	App/flash/w25qxx.c:8: SCS = 1;
+;	assignBit
+	setb	_SCS
+;	App/flash/w25qxx.c:9: wakeup();
+;	App/flash/w25qxx.c:10: }
+	ljmp	_wakeup
+;------------------------------------------------------------
+;Allocation info for local variables in function 'select'
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:12: void select()
+;	-----------------------------------------
+;	 function select
+;	-----------------------------------------
+_select:
+;	App/flash/w25qxx.c:14: SCS = 0;
 ;	assignBit
 	clr	_SCS
-;	App/flash/w25qxx.c:6: }
+;	App/flash/w25qxx.c:15: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'unselect'
 ;------------------------------------------------------------
-;	App/flash/w25qxx.c:8: void unselect() {
+;	App/flash/w25qxx.c:17: void unselect()
 ;	-----------------------------------------
 ;	 function unselect
 ;	-----------------------------------------
 _unselect:
-;	App/flash/w25qxx.c:9: SCS = 1;
+;	App/flash/w25qxx.c:19: SCS = 1;
 ;	assignBit
 	setb	_SCS
-;	App/flash/w25qxx.c:10: }
+;	App/flash/w25qxx.c:20: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'sendCommand'
 ;------------------------------------------------------------
 ;cmd                       Allocated to registers r7 
 ;------------------------------------------------------------
-;	App/flash/w25qxx.c:12: void sendCommand(uint8_t cmd) {
+;	App/flash/w25qxx.c:22: void sendCommand(uint8_t cmd)
 ;	-----------------------------------------
 ;	 function sendCommand
 ;	-----------------------------------------
 _sendCommand:
 	mov	r7,dpl
-;	App/flash/w25qxx.c:13: select();
+;	App/flash/w25qxx.c:24: if (cmd != SPIFLASH_WAKE) while(busy());
+	cjne	r7,#0xab,00112$
+	sjmp	00105$
+00112$:
+00101$:
+	push	ar7
+	lcall	_busy
+	mov	a,dpl
+	pop	ar7
+	jnz	00101$
+00105$:
+;	App/flash/w25qxx.c:26: select();
 	push	ar7
 	lcall	_select
 	pop	ar7
-;	App/flash/w25qxx.c:14: CH554SPIMasterWrite(cmd);
+;	App/flash/w25qxx.c:27: CH554SPIMasterWrite(cmd);
 	mov	dpl,r7
-;	App/flash/w25qxx.c:15: }
+;	App/flash/w25qxx.c:28: }
 	ljmp	_CH554SPIMasterWrite
-;------------------------------------------------------------
-;Allocation info for local variables in function 'readByte'
-;------------------------------------------------------------
-;addr                      Allocated to registers r4 r5 r6 r7 
-;result                    Allocated to registers r7 
-;------------------------------------------------------------
-;	App/flash/w25qxx.c:18: uint8_t readByte(uint32_t addr) { 
-;	-----------------------------------------
-;	 function readByte
-;	-----------------------------------------
-_readByte:
-	mov	r4,dpl
-	mov	r5,dph
-	mov	r6,b
-	mov	r7,a
-;	App/flash/w25qxx.c:20: sendCommand(SPIFLASH_ARRAYREADLOWFREQ);
-	mov	dpl,#0x03
-	push	ar7
-	push	ar6
-	push	ar5
-	push	ar4
-	lcall	_sendCommand
-	pop	ar4
-	pop	ar5
-	pop	ar6
-;	App/flash/w25qxx.c:21: CH554SPIMasterWrite(addr >> 16);
-	mov	dpl,r6
-	push	ar6
-	push	ar5
-	push	ar4
-	lcall	_CH554SPIMasterWrite
-	pop	ar4
-	pop	ar5
-;	App/flash/w25qxx.c:22: CH554SPIMasterWrite(addr >> 8);
-	mov	dpl,r5
-	push	ar5
-	push	ar4
-	lcall	_CH554SPIMasterWrite
-	pop	ar4
-	pop	ar5
-	pop	ar6
-	pop	ar7
-;	App/flash/w25qxx.c:23: CH554SPIMasterWrite(addr);
-	mov	dpl,r4
-	lcall	_CH554SPIMasterWrite
-;	App/flash/w25qxx.c:24: mDelayuS(2);
-	mov	dptr,#0x0002
-	lcall	_mDelayuS
-;	App/flash/w25qxx.c:25: uint8_t result = CH554SPIMasterRead();
-	lcall	_CH554SPIMasterRead
-	mov	r7,dpl
-;	App/flash/w25qxx.c:26: unselect();
-	push	ar7
-	lcall	_unselect
-	pop	ar7
-;	App/flash/w25qxx.c:30: return result;
-	mov	dpl,r7
-;	App/flash/w25qxx.c:31: }
-	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'readDeviceId'
 ;------------------------------------------------------------
 ;id                        Allocated to registers r5 r4 
 ;------------------------------------------------------------
-;	App/flash/w25qxx.c:33: uint16_t readDeviceId() {
+;	App/flash/w25qxx.c:30: uint16_t readDeviceId()
 ;	-----------------------------------------
 ;	 function readDeviceId
 ;	-----------------------------------------
 _readDeviceId:
-;	App/flash/w25qxx.c:37: sendCommand(SPIFLASH_IDREAD);
+;	App/flash/w25qxx.c:35: sendCommand(SPIFLASH_IDREAD);
 	mov	dpl,#0x9f
 	lcall	_sendCommand
-;	App/flash/w25qxx.c:38: mDelayuS(2);
+;	App/flash/w25qxx.c:36: mDelayuS(2);
 	mov	dptr,#0x0002
 	lcall	_mDelayuS
-;	App/flash/w25qxx.c:39: id = CH554SPIMasterRead() << 8;
+;	App/flash/w25qxx.c:37: id = CH554SPIMasterRead() << 8;
 	lcall	_CH554SPIMasterRead
 	mov	r6,dpl
 	mov	r7,#0x00
-;	App/flash/w25qxx.c:40: id |= CH554SPIMasterRead();
+;	App/flash/w25qxx.c:38: id |= CH554SPIMasterRead();
 	push	ar7
 	push	ar6
 	lcall	_CH554SPIMasterRead
@@ -709,95 +714,706 @@ _readDeviceId:
 	orl	ar5,a
 	mov	a,r6
 	orl	ar4,a
-;	App/flash/w25qxx.c:41: unselect();
+;	App/flash/w25qxx.c:39: unselect();
 	push	ar5
 	push	ar4
 	lcall	_unselect
 	pop	ar4
 	pop	ar5
-;	App/flash/w25qxx.c:43: return id;
+;	App/flash/w25qxx.c:41: return id;
 	mov	dpl,r5
 	mov	dph,r4
-;	App/flash/w25qxx.c:44: }
+;	App/flash/w25qxx.c:42: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'readUniqueId'
 ;------------------------------------------------------------
 ;a                         Allocated to registers r7 
 ;------------------------------------------------------------
-;	App/flash/w25qxx.c:47: uint8_t* readUniqueId()
+;	App/flash/w25qxx.c:44: uint8_t *readUniqueId()
 ;	-----------------------------------------
 ;	 function readUniqueId
 ;	-----------------------------------------
 _readUniqueId:
-;	App/flash/w25qxx.c:49: sendCommand(SPIFLASH_MACREAD);  
+;	App/flash/w25qxx.c:46: sendCommand(SPIFLASH_MACREAD);
 	mov	dpl,#0x4b
 	lcall	_sendCommand
-;	App/flash/w25qxx.c:50: mDelayuS(2);
+;	App/flash/w25qxx.c:47: mDelayuS(2);
 	mov	dptr,#0x0002
 	lcall	_mDelayuS
+;	App/flash/w25qxx.c:48: CH554SPIMasterWrite(0);
+	mov	dpl,#0x00
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:49: CH554SPIMasterWrite(0);
+	mov	dpl,#0x00
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:50: CH554SPIMasterWrite(0);
+	mov	dpl,#0x00
+	lcall	_CH554SPIMasterWrite
 ;	App/flash/w25qxx.c:51: CH554SPIMasterWrite(0);
 	mov	dpl,#0x00
 	lcall	_CH554SPIMasterWrite
-;	App/flash/w25qxx.c:52: CH554SPIMasterWrite(0);
-	mov	dpl,#0x00
-	lcall	_CH554SPIMasterWrite
-;	App/flash/w25qxx.c:53: CH554SPIMasterWrite(0);
-	mov	dpl,#0x00
-	lcall	_CH554SPIMasterWrite
-;	App/flash/w25qxx.c:54: CH554SPIMasterWrite(0);
-	mov	dpl,#0x00
-	lcall	_CH554SPIMasterWrite
-;	App/flash/w25qxx.c:55: mDelayuS(2);
+;	App/flash/w25qxx.c:52: mDelayuS(2);
 	mov	dptr,#0x0002
 	lcall	_mDelayuS
-;	App/flash/w25qxx.c:56: for (uint8_t a=0;a<8;a++) {
+;	App/flash/w25qxx.c:53: for (uint8_t a = 0; a < 8; a++)
 	mov	r7,#0x00
 00103$:
 	cjne	r7,#0x08,00116$
 00116$:
 	jnc	00101$
-;	App/flash/w25qxx.c:57: UNIQUEID[a] = CH554SPIMasterRead();
+;	App/flash/w25qxx.c:55: UNIQUEID[a] = CH554SPIMasterRead();
 	mov	a,r7
 	add	a,#_UNIQUEID
-	mov	r1,a
+	mov	r5,a
+	clr	a
+	addc	a,#(_UNIQUEID >> 8)
+	mov	r6,a
 	push	ar7
-	push	ar1
+	push	ar6
+	push	ar5
 	lcall	_CH554SPIMasterRead
-	mov	a,dpl
-	pop	ar1
+	mov	r4,dpl
+	pop	ar5
+	pop	ar6
 	pop	ar7
-	mov	@r1,a
-;	App/flash/w25qxx.c:56: for (uint8_t a=0;a<8;a++) {
+	mov	dpl,r5
+	mov	dph,r6
+	mov	a,r4
+	movx	@dptr,a
+;	App/flash/w25qxx.c:53: for (uint8_t a = 0; a < 8; a++)
 	inc	r7
 	sjmp	00103$
 00101$:
-;	App/flash/w25qxx.c:59: unselect();
+;	App/flash/w25qxx.c:57: unselect();
 	lcall	_unselect
-;	App/flash/w25qxx.c:61: return UNIQUEID;
+;	App/flash/w25qxx.c:59: return UNIQUEID;
 	mov	dptr,#_UNIQUEID
-	mov	b,#0x40
-;	App/flash/w25qxx.c:62: }
+	mov	b,#0x00
+;	App/flash/w25qxx.c:60: }
 	ret
 ;------------------------------------------------------------
-;Allocation info for local variables in function 'SPISetup'
+;Allocation info for local variables in function 'readByte'
 ;------------------------------------------------------------
-;	App/flash/w25qxx.c:65: void  SPISetup()
+;addr                      Allocated to registers r4 r5 r6 r7 
+;result                    Allocated to registers r7 
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:62: uint8_t readByte(uint32_t addr)
 ;	-----------------------------------------
-;	 function SPISetup
+;	 function readByte
 ;	-----------------------------------------
-_SPISetup:
-;	App/flash/w25qxx.c:67: SPIMasterModeSet(3);  // SPI master mode setting, mode 3
+_readByte:
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
+;	App/flash/w25qxx.c:64: sendCommand(SPIFLASH_ARRAYREADLOWFREQ);
 	mov	dpl,#0x03
-	lcall	_SPIMasterModeSet
-;	App/flash/w25qxx.c:68: SPI_CK_SET(2);        // divide by 2, fastest
-	mov	_SPI0_CK_SE,#0x02
-;	App/flash/w25qxx.c:69: SCS = 1;
-;	assignBit
-	setb	_SCS
-;	App/flash/w25qxx.c:70: }
+	push	ar7
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_sendCommand
+	pop	ar4
+	pop	ar5
+	pop	ar6
+;	App/flash/w25qxx.c:65: CH554SPIMasterWrite(addr >> 16);
+	mov	dpl,r6
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+;	App/flash/w25qxx.c:66: CH554SPIMasterWrite(addr >> 8);
+	mov	dpl,r5
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+	pop	ar6
+	pop	ar7
+;	App/flash/w25qxx.c:67: CH554SPIMasterWrite(addr);
+	mov	dpl,r4
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:68: mDelayuS(2);
+	mov	dptr,#0x0002
+	lcall	_mDelayuS
+;	App/flash/w25qxx.c:69: uint8_t result = CH554SPIMasterRead();
+	lcall	_CH554SPIMasterRead
+	mov	r7,dpl
+;	App/flash/w25qxx.c:70: unselect();
+	push	ar7
+	lcall	_unselect
+	pop	ar7
+;	App/flash/w25qxx.c:74: return result;
+	mov	dpl,r7
+;	App/flash/w25qxx.c:75: }
 	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'readBytes'
+;------------------------------------------------------------
+;buf                       Allocated with name '_readBytes_PARM_2'
+;len                       Allocated with name '_readBytes_PARM_3'
+;addr                      Allocated to registers r4 r5 r6 r7 
+;i                         Allocated to registers r6 r7 
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:78: void readBytes(uint32_t addr, void *buf, uint16_t len)
+;	-----------------------------------------
+;	 function readBytes
+;	-----------------------------------------
+_readBytes:
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
+;	App/flash/w25qxx.c:80: sendCommand(SPIFLASH_ARRAYREAD);
+	mov	dpl,#0x0b
+	push	ar7
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_sendCommand
+	pop	ar4
+	pop	ar5
+	pop	ar6
+;	App/flash/w25qxx.c:81: CH554SPIMasterWrite(addr >> 16);
+	mov	dpl,r6
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+;	App/flash/w25qxx.c:82: CH554SPIMasterWrite(addr >> 8);
+	mov	dpl,r5
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+	pop	ar6
+	pop	ar7
+;	App/flash/w25qxx.c:83: CH554SPIMasterWrite(addr);
+	mov	dpl,r4
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:84: CH554SPIMasterWrite(0); //"dont care"
+	mov	dpl,#0x00
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:85: for (uint16_t i = 0; i < len; ++i)
+	mov	r6,#0x00
+	mov	r7,#0x00
+00103$:
+	clr	c
+	mov	a,r6
+	subb	a,_readBytes_PARM_3
+	mov	a,r7
+	subb	a,(_readBytes_PARM_3 + 1)
+	jnc	00101$
+;	App/flash/w25qxx.c:86: ((uint8_t *)buf)[i] = CH554SPIMasterRead();
+	mov	r3,_readBytes_PARM_2
+	mov	r4,(_readBytes_PARM_2 + 1)
+	mov	r5,(_readBytes_PARM_2 + 2)
+	mov	a,r6
+	add	a,r3
+	mov	r3,a
+	mov	a,r7
+	addc	a,r4
+	mov	r4,a
+	push	ar7
+	push	ar6
+	push	ar5
+	push	ar4
+	push	ar3
+	lcall	_CH554SPIMasterRead
+	mov	r2,dpl
+	pop	ar3
+	pop	ar4
+	pop	ar5
+	pop	ar6
+	pop	ar7
+	mov	dpl,r3
+	mov	dph,r4
+	mov	b,r5
+	mov	a,r2
+	lcall	__gptrput
+;	App/flash/w25qxx.c:85: for (uint16_t i = 0; i < len; ++i)
+	inc	r6
+	cjne	r6,#0x00,00103$
+	inc	r7
+	sjmp	00103$
+00101$:
+;	App/flash/w25qxx.c:87: unselect();
+;	App/flash/w25qxx.c:88: }
+	ljmp	_unselect
+;------------------------------------------------------------
+;Allocation info for local variables in function 'readStatus'
+;------------------------------------------------------------
+;status                    Allocated to registers r7 
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:91: uint8_t readStatus()
+;	-----------------------------------------
+;	 function readStatus
+;	-----------------------------------------
+_readStatus:
+;	App/flash/w25qxx.c:93: select();  
+	lcall	_select
+;	App/flash/w25qxx.c:94: CH554SPIMasterWrite(SPIFLASH_STATUSREAD);
+	mov	dpl,#0x05
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:95: uint8_t status = CH554SPIMasterRead();
+	lcall	_CH554SPIMasterRead
+	mov	r7,dpl
+;	App/flash/w25qxx.c:96: unselect();
+	push	ar7
+	lcall	_unselect
+	pop	ar7
+;	App/flash/w25qxx.c:97: return status;
+	mov	dpl,r7
+;	App/flash/w25qxx.c:98: }
+	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'busy'
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:101: bool busy()
+;	-----------------------------------------
+;	 function busy
+;	-----------------------------------------
+_busy:
+;	App/flash/w25qxx.c:103: return readStatus() & 1;
+	lcall	_readStatus
+	mov	a,dpl
+	rrc	a
+	clr	a
+	rlc	a
+	mov	dpl,a
+;	App/flash/w25qxx.c:104: }
+	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'enableWrite'
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:106: void enableWrite()
+;	-----------------------------------------
+;	 function enableWrite
+;	-----------------------------------------
+_enableWrite:
+;	App/flash/w25qxx.c:108: sendCommand(SPIFLASH_WRITEENABLE);
+	mov	dpl,#0x06
+	lcall	_sendCommand
+;	App/flash/w25qxx.c:109: unselect();
+;	App/flash/w25qxx.c:110: }
+	ljmp	_unselect
+;------------------------------------------------------------
+;Allocation info for local variables in function 'writeByte'
+;------------------------------------------------------------
+;byt                       Allocated with name '_writeByte_PARM_2'
+;addr                      Allocated to registers r4 r5 r6 r7 
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:112: void writeByte(uint32_t addr, uint8_t byt)
+;	-----------------------------------------
+;	 function writeByte
+;	-----------------------------------------
+_writeByte:
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
+;	App/flash/w25qxx.c:114: enableWrite();
+	push	ar7
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_enableWrite
+;	App/flash/w25qxx.c:115: sendCommand(SPIFLASH_BYTEPAGEPROGRAM);
+	mov	dpl,#0x02
+	lcall	_sendCommand
+	pop	ar4
+	pop	ar5
+	pop	ar6
+;	App/flash/w25qxx.c:116: CH554SPIMasterWrite(addr >> 16);
+	mov	dpl,r6
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+;	App/flash/w25qxx.c:117: CH554SPIMasterWrite(addr >> 8);
+	mov	dpl,r5
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+	pop	ar6
+	pop	ar7
+;	App/flash/w25qxx.c:118: CH554SPIMasterWrite(addr);
+	mov	dpl,r4
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:119: CH554SPIMasterWrite(byt);
+	mov	dpl,_writeByte_PARM_2
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:120: unselect();
+;	App/flash/w25qxx.c:121: }
+	ljmp	_unselect
+;------------------------------------------------------------
+;Allocation info for local variables in function 'writeBytes'
+;------------------------------------------------------------
+;buf                       Allocated with name '_writeBytes_PARM_2'
+;len                       Allocated with name '_writeBytes_PARM_3'
+;addr                      Allocated with name '_writeBytes_addr_65536_67'
+;n                         Allocated with name '_writeBytes_n_65536_68'
+;maxBytes                  Allocated with name '_writeBytes_maxBytes_65536_68'
+;offset                    Allocated with name '_writeBytes_offset_65536_68'
+;i                         Allocated to registers r0 r1 
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:129: void writeBytes(uint32_t addr, const void* buf, uint16_t len) {
+;	-----------------------------------------
+;	 function writeBytes
+;	-----------------------------------------
+_writeBytes:
+	mov	_writeBytes_addr_65536_67,dpl
+	mov	(_writeBytes_addr_65536_67 + 1),dph
+	mov	(_writeBytes_addr_65536_67 + 2),b
+	mov	(_writeBytes_addr_65536_67 + 3),a
+;	App/flash/w25qxx.c:131: uint16_t maxBytes = 256-(addr%256);  // force the first set of bytes to stay within the first page
+	mov	r0,_writeBytes_addr_65536_67
+	clr	a
+	mov	r1,a
+	mov	r2,a
+	mov	r3,a
+	clr	c
+	subb	a,r0
+	mov	_writeBytes_maxBytes_65536_68,a
+	mov	a,#0x01
+	subb	a,r1
+	mov	(_writeBytes_maxBytes_65536_68 + 1),a
+;	App/flash/w25qxx.c:132: uint16_t offset = 0;
+	clr	a
+	mov	_writeBytes_offset_65536_68,a
+	mov	(_writeBytes_offset_65536_68 + 1),a
+;	App/flash/w25qxx.c:133: while (len>0)
+00102$:
+	mov	a,_writeBytes_PARM_3
+	orl	a,(_writeBytes_PARM_3 + 1)
+	jnz	00133$
+	ret
+00133$:
+;	App/flash/w25qxx.c:135: n = (len<=maxBytes) ? len : maxBytes;
+	clr	c
+	mov	a,_writeBytes_maxBytes_65536_68
+	subb	a,_writeBytes_PARM_3
+	mov	a,(_writeBytes_maxBytes_65536_68 + 1)
+	subb	a,(_writeBytes_PARM_3 + 1)
+	jc	00110$
+	mov	r2,_writeBytes_PARM_3
+	mov	r3,(_writeBytes_PARM_3 + 1)
+	sjmp	00111$
+00110$:
+	mov	r2,_writeBytes_maxBytes_65536_68
+	mov	r3,(_writeBytes_maxBytes_65536_68 + 1)
+00111$:
+	mov	_writeBytes_n_65536_68,r2
+	mov	(_writeBytes_n_65536_68 + 1),r3
+;	App/flash/w25qxx.c:136: enableWrite();
+	lcall	_enableWrite
+;	App/flash/w25qxx.c:137: sendCommand(SPIFLASH_BYTEPAGEPROGRAM);
+	mov	dpl,#0x02
+	lcall	_sendCommand
+;	App/flash/w25qxx.c:138: CH554SPIMasterWrite(addr >> 16);
+	mov	dpl,(_writeBytes_addr_65536_67 + 2)
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:139: CH554SPIMasterWrite(addr >> 8);
+	mov	dpl,(_writeBytes_addr_65536_67 + 1)
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:140: CH554SPIMasterWrite(addr);
+	mov	dpl,_writeBytes_addr_65536_67
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:142: for (uint16_t i = 0; i < n; i++)
+	mov	r0,#0x00
+	mov	r1,#0x00
+00106$:
+	clr	c
+	mov	a,r0
+	subb	a,_writeBytes_n_65536_68
+	mov	a,r1
+	subb	a,(_writeBytes_n_65536_68 + 1)
+	jnc	00101$
+;	App/flash/w25qxx.c:143: CH554SPIMasterWrite(((uint8_t*) buf)[offset + i]);
+	mov	r5,_writeBytes_PARM_2
+	mov	r6,(_writeBytes_PARM_2 + 1)
+	mov	r7,(_writeBytes_PARM_2 + 2)
+	mov	a,r0
+	add	a,_writeBytes_offset_65536_68
+	mov	r3,a
+	mov	a,r1
+	addc	a,(_writeBytes_offset_65536_68 + 1)
+	mov	r4,a
+	mov	a,r3
+	add	a,r5
+	mov	r5,a
+	mov	a,r4
+	addc	a,r6
+	mov	r6,a
+	mov	dpl,r5
+	mov	dph,r6
+	mov	b,r7
+	lcall	__gptrget
+	mov	dpl,a
+	push	ar1
+	push	ar0
+	lcall	_CH554SPIMasterWrite
+	pop	ar0
+	pop	ar1
+;	App/flash/w25qxx.c:142: for (uint16_t i = 0; i < n; i++)
+	inc	r0
+	cjne	r0,#0x00,00106$
+	inc	r1
+	sjmp	00106$
+00101$:
+;	App/flash/w25qxx.c:144: unselect();
+	lcall	_unselect
+;	App/flash/w25qxx.c:146: addr+=n;  // adjust the addresses and remaining bytes by what we've just transferred.
+	mov	r2,_writeBytes_n_65536_68
+	mov	r3,(_writeBytes_n_65536_68 + 1)
+	clr	a
+	mov	r6,a
+	mov	r7,a
+	mov	a,r2
+	add	a,_writeBytes_addr_65536_67
+	mov	_writeBytes_addr_65536_67,a
+	mov	a,r3
+	addc	a,(_writeBytes_addr_65536_67 + 1)
+	mov	(_writeBytes_addr_65536_67 + 1),a
+	mov	a,r6
+	addc	a,(_writeBytes_addr_65536_67 + 2)
+	mov	(_writeBytes_addr_65536_67 + 2),a
+	mov	a,r7
+	addc	a,(_writeBytes_addr_65536_67 + 3)
+	mov	(_writeBytes_addr_65536_67 + 3),a
+;	App/flash/w25qxx.c:147: offset +=n;
+	mov	a,_writeBytes_n_65536_68
+	add	a,_writeBytes_offset_65536_68
+	mov	_writeBytes_offset_65536_68,a
+	mov	a,(_writeBytes_n_65536_68 + 1)
+	addc	a,(_writeBytes_offset_65536_68 + 1)
+	mov	(_writeBytes_offset_65536_68 + 1),a
+;	App/flash/w25qxx.c:148: len -= n;
+	mov	a,_writeBytes_PARM_3
+	clr	c
+	subb	a,_writeBytes_n_65536_68
+	mov	_writeBytes_PARM_3,a
+	mov	a,(_writeBytes_PARM_3 + 1)
+	subb	a,(_writeBytes_n_65536_68 + 1)
+	mov	(_writeBytes_PARM_3 + 1),a
+;	App/flash/w25qxx.c:149: maxBytes = 256;   // now we can do up to 256 bytes per loop
+;	1-genFromRTrack replaced	mov	_writeBytes_maxBytes_65536_68,#0x00
+	mov	_writeBytes_maxBytes_65536_68,r7
+	mov	(_writeBytes_maxBytes_65536_68 + 1),#0x01
+;	App/flash/w25qxx.c:151: }
+	ljmp	00102$
+;------------------------------------------------------------
+;Allocation info for local variables in function 'chipErase'
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:159: void chipErase() {
+;	-----------------------------------------
+;	 function chipErase
+;	-----------------------------------------
+_chipErase:
+;	App/flash/w25qxx.c:160: enableWrite();
+	lcall	_enableWrite
+;	App/flash/w25qxx.c:161: sendCommand(SPIFLASH_CHIPERASE);
+	mov	dpl,#0x60
+	lcall	_sendCommand
+;	App/flash/w25qxx.c:162: unselect();
+;	App/flash/w25qxx.c:163: }
+	ljmp	_unselect
+;------------------------------------------------------------
+;Allocation info for local variables in function 'blockErase4K'
+;------------------------------------------------------------
+;addr                      Allocated to registers r4 r5 r6 r7 
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:166: void blockErase4K(uint32_t addr) {
+;	-----------------------------------------
+;	 function blockErase4K
+;	-----------------------------------------
+_blockErase4K:
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
+;	App/flash/w25qxx.c:167: enableWrite();
+	push	ar7
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_enableWrite
+;	App/flash/w25qxx.c:168: sendCommand(SPIFLASH_BLOCKERASE_4K);
+	mov	dpl,#0x20
+	lcall	_sendCommand
+	pop	ar4
+	pop	ar5
+	pop	ar6
+;	App/flash/w25qxx.c:169: CH554SPIMasterWrite(addr >> 16);
+	mov	dpl,r6
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+;	App/flash/w25qxx.c:170: CH554SPIMasterWrite(addr >> 8);
+	mov	dpl,r5
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+	pop	ar6
+	pop	ar7
+;	App/flash/w25qxx.c:171: CH554SPIMasterWrite(addr);
+	mov	dpl,r4
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:172: unselect();
+;	App/flash/w25qxx.c:173: }
+	ljmp	_unselect
+;------------------------------------------------------------
+;Allocation info for local variables in function 'blockErase32K'
+;------------------------------------------------------------
+;addr                      Allocated to registers r4 r5 r6 r7 
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:176: void blockErase32K(uint32_t addr) {
+;	-----------------------------------------
+;	 function blockErase32K
+;	-----------------------------------------
+_blockErase32K:
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
+;	App/flash/w25qxx.c:177: enableWrite();
+	push	ar7
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_enableWrite
+;	App/flash/w25qxx.c:178: sendCommand(SPIFLASH_BLOCKERASE_32K);
+	mov	dpl,#0x52
+	lcall	_sendCommand
+	pop	ar4
+	pop	ar5
+	pop	ar6
+;	App/flash/w25qxx.c:179: CH554SPIMasterWrite(addr >> 16);
+	mov	dpl,r6
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+;	App/flash/w25qxx.c:180: CH554SPIMasterWrite(addr >> 8);
+	mov	dpl,r5
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+	pop	ar6
+	pop	ar7
+;	App/flash/w25qxx.c:181: CH554SPIMasterWrite(addr);
+	mov	dpl,r4
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:182: unselect();
+;	App/flash/w25qxx.c:183: }
+	ljmp	_unselect
+;------------------------------------------------------------
+;Allocation info for local variables in function 'blockErase64K'
+;------------------------------------------------------------
+;addr                      Allocated to registers r4 r5 r6 r7 
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:186: void blockErase64K(uint32_t addr) {
+;	-----------------------------------------
+;	 function blockErase64K
+;	-----------------------------------------
+_blockErase64K:
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
+;	App/flash/w25qxx.c:187: enableWrite();
+	push	ar7
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_enableWrite
+;	App/flash/w25qxx.c:188: sendCommand(SPIFLASH_BLOCKERASE_64K);
+	mov	dpl,#0xd8
+	lcall	_sendCommand
+	pop	ar4
+	pop	ar5
+	pop	ar6
+;	App/flash/w25qxx.c:189: CH554SPIMasterWrite(addr >> 16);
+	mov	dpl,r6
+	push	ar6
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+;	App/flash/w25qxx.c:190: CH554SPIMasterWrite(addr >> 8);
+	mov	dpl,r5
+	push	ar5
+	push	ar4
+	lcall	_CH554SPIMasterWrite
+	pop	ar4
+	pop	ar5
+	pop	ar6
+	pop	ar7
+;	App/flash/w25qxx.c:191: CH554SPIMasterWrite(addr);
+	mov	dpl,r4
+	lcall	_CH554SPIMasterWrite
+;	App/flash/w25qxx.c:192: unselect();
+;	App/flash/w25qxx.c:193: }
+	ljmp	_unselect
+;------------------------------------------------------------
+;Allocation info for local variables in function 'sleep'
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:200: void sleep() {
+;	-----------------------------------------
+;	 function sleep
+;	-----------------------------------------
+_sleep:
+;	App/flash/w25qxx.c:201: sendCommand(SPIFLASH_SLEEP);
+	mov	dpl,#0xb9
+	lcall	_sendCommand
+;	App/flash/w25qxx.c:202: unselect();
+;	App/flash/w25qxx.c:203: }
+	ljmp	_unselect
+;------------------------------------------------------------
+;Allocation info for local variables in function 'wakeup'
+;------------------------------------------------------------
+;	App/flash/w25qxx.c:209: void wakeup() {
+;	-----------------------------------------
+;	 function wakeup
+;	-----------------------------------------
+_wakeup:
+;	App/flash/w25qxx.c:210: sendCommand(SPIFLASH_WAKE);
+	mov	dpl,#0xab
+	lcall	_sendCommand
+;	App/flash/w25qxx.c:211: unselect();
+;	App/flash/w25qxx.c:212: }
+	ljmp	_unselect
 	.area CSEG    (CODE)
 	.area CONST   (CODE)
 	.area XINIT   (CODE)
+__xinit__UNIQUEID:
+	.db #0x00	; 0
+	.db 0x00
+	.db 0x00
+	.db 0x00
+	.db 0x00
+	.db 0x00
+	.db 0x00
+	.db 0x00
 	.area CABS    (ABS,CODE)
