@@ -1,6 +1,11 @@
 #include "Print.h"
 
 
+uint8_t printLineBreak()
+{
+    return printText("\n");
+}
+
 uint8_t printText(char * __xdata str)
 {
     uint8_t n = 0;

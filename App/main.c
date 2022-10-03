@@ -14,101 +14,269 @@
 #define LED_PIN 0
 SBIT(LED, 0xB0, LED_PIN);
 
-void USBInterrupt(void); //USBInterrupt does not need to saves the context
+#define PINCH_DEVCONTROL   0x11        // Device Control 1
 
-void DeviceUSBInterrupt(void) __interrupt (INT_NO_USB)                       //USB interrupt service
+#define PINCH_STORE        0x0c        // Form Feed
+#define PINCH_LOAD         0x05        // Enquiry
+#define PINCH_ERASE        0x7f        // Delete
+
+#define PINCH_DLE          0x10        // Data Link Escape
+#define PINCH_RS           0x1E        // Record Separator
+#define PINCH_EOT          0x04        // End Of Transmission
+
+void USBInterrupt(void); // USBInterrupt does not need to saves the context
+void DeviceUSBInterrupt(void) __interrupt(INT_NO_USB) // USB interrupt service
 {
-    USBInterrupt();
+  USBInterrupt();
+}
+
+struct ProtocolStructure
+{
+  uint8_t control_flag;
+  uint8_t operation;
+  uint8_t param;
+  uint8_t payload_size;
+};
+
+
+enum ProtocolState {
+  
+  begin_of_transmission,
+  operation,
+  parameter,
+  payload,
+  end_of_transmission,
+  payload_error
+    
+} current_state;
+
+
+struct ProtocolStructure protocol;
+
+uint8_t _currentBlock = 0;
+uint8_t cmdByte;
+uint8_t lastCmdByte;
+
+long byteCount = 0;
+
+
+void blink(uint8_t times)
+{
+
+  for (uint8_t i = 0; i < times; i++)
+  {
+    LED = 1;
+    mDelaymS(250);
+    LED = 0;
+    mDelaymS(250);
+  }
+
+}
+
+uint32_t getMemAddress(uint8_t slot, uint8_t sector_num, uint8_t page_num) {
+
+  uint32_t block = (uint32_t)(slot/16)<<16;
+  uint32_t sector = (uint32_t)(((slot%16)*16)+sector_num)<<8;
+  
+//  USBSerial_print("Address: ");
+//  USBSerial_println(slot, DEC);
+//  USBSerial_println(block, HEX);
+//  USBSerial_println(sector, HEX);
+//  USBSerial_println("---");
+
+    
+  return block | sector | page_num;
 }
 
 
-void blink(uint8_t times) {
+void storePayload(uint8_t payload) 
+{
+  // printText("Store: ");
+  // printNumbers(byteCount, DEC);
+  // printLineBreak();
+}
 
-    for (uint8_t i = 0; i<times; i++) {
-        LED = 1;
-        mDelaymS(250);
-        LED = 0;
-        mDelaymS(250);
+
+void loadData(uint8_t payload) 
+{   
+  printText("Load: ");
+  printNumbers(payload, HEX);
+  printLineBreak();
+}
+
+
+void operationHandler(uint8_t payload) 
+{
+
+  switch (protocol.operation) {
+      
+    case PINCH_STORE:
+      storePayload(payload);     
+      break;
+    case PINCH_LOAD:
+      loadData(payload);
+      break;
+    case PINCH_ERASE:
+      printText("Erase\n");
+      mDelaymS(1000);
+      break;
+    default:
+      break;
+  }
+  
+}
+
+void setup()
+{
+  CfgFsys();
+  LED = 0;
+  mDelaymS(10);
+
+  USBInit();
+  USBSerial();
+  SPISetup();
+
+  blink(3);
+
+  current_state = begin_of_transmission;
+}
+
+void loop()
+{
+  while(1)
+  {
+
+    if (USBSerial_available() > 0)
+    {
+      uint8_t cmdByte = USBSerial_read();
+      
+      // _sbuffer[byteCount++] = cmdByte;
+
+      // if (byteCount >= 31 || (lastCmdByte == PINCH_RS && cmdByte == PINCH_EOT)) {
+
+      //   for (int a=0; a<32; a++){
+      //     printNumbers(_sbuffer[a], HEX);
+      //     printText(".");
+      //     _sbuffer[a] = 0xff;
+      //   }
+      //   byteCount = 0;
+        
+      // }
+      
+      switch (current_state)
+      {
+        case begin_of_transmission:
+          if (cmdByte == PINCH_DEVCONTROL)
+          {
+            protocol.control_flag = cmdByte;
+            current_state = operation;
+
+            // printText("Device Control: ");
+            // printNumbers(cmdByte, HEX);
+            // printLineBreak();
+          }
+          break;
+
+        case operation:
+          // TODO verify if operation exists
+          protocol.operation = cmdByte;
+          current_state = parameter;
+
+          // printText("Operation: ");
+          // printNumbers(cmdByte, HEX);
+          // printLineBreak();
+          break;
+
+        case parameter:
+
+          if (lastCmdByte == PINCH_RS && cmdByte == PINCH_EOT)
+          {
+            current_state = end_of_transmission;
+          }
+          else if (protocol.param == lastCmdByte)
+          {
+            protocol.payload_size = cmdByte;
+            current_state = payload;
+
+            // printText("Param Size: ");
+            // printNumbers(cmdByte, DEC);
+            // printLineBreak();
+          }
+          else
+          {
+            protocol.param = cmdByte;
+            // printText("Param #: ");
+            // printNumbers(cmdByte, HEX);
+            // printLineBreak();
+          }
+
+          break;
+        case payload:
+          if (lastCmdByte == PINCH_DLE && cmdByte == PINCH_RS)
+          {
+            byteCount = 0;
+            current_state = parameter;
+          }
+          else if (protocol.payload_size > 0 && protocol.payload_size == byteCount)
+          {
+            if (cmdByte == PINCH_RS)
+            {
+              current_state = parameter;
+            }
+            else
+            {
+              current_state = payload_error;
+            }
+            printLineBreak();
+            byteCount = 0;
+          }
+          else
+          {
+            byteCount++;
+            if (protocol.payload_size == 0 || byteCount <= protocol.payload_size)
+            {
+              operationHandler(cmdByte);
+            }
+          }
+          break;
+
+        case end_of_transmission:
+          protocol.control_flag = 0;
+          protocol.operation = 0;
+          protocol.param = 0;
+          protocol.payload_size = 0;
+          byteCount = 0;
+          current_state = begin_of_transmission;
+          storePayload(0);
+          printLineBreak();
+          USBSerial_flush();
+          break;
+
+        case payload_error:
+          printLineBreak();
+          USBSerial_flush();
+          printText("ERROR!");
+          // TODO format block
+          current_state = end_of_transmission;
+          break;
+
+        default:
+          // ignore any unrecognized bytes.
+          break;
+      }
+
+      lastCmdByte = cmdByte;
     }
-
-    mDelaymS(1000);
+    
+    USBSerial_flush();
+  }
+  
 }
-
 
 void main()
 {
-    CfgFsys(); 
-    LED = 0;
-    mDelaymS(10);
-
-    USBInit();
-    USBSerial();
-    SPISetup();
-
-    blink(3);
-    
-
-    for (;;) {
-        
-        if (USBSerial_available()) {
-
-            uint8_t serialChar = USBSerial_read();
-            
-            
-            if (serialChar == 'a') {
-                printText("Hello world\n");
-            
-            } else if (serialChar == 'b') {
-
-                printText("Device Id:");
-
-                
-                uint16_t devId = readDeviceId();
-                
-                printNumbers(devId, HEX);
-                
-                
-            } else if (serialChar == 'c') {
-                
-                printText("Reading page...\n");
-               
-                     
-                for (uint8_t p=0; p<8; p++) {
-                    printText("\n");
-                    printText("Page: ");
-                    printNumbers(p, DEC);
-                    printText("\n");
-                    
-                    for (uint32_t i=0; i<32; i++) {  
-                        printNumbers(readByte((p*256)+i), HEX);
-                        printText(".");
-                        //mDelaymS(2);
-                    }
-
-                }
-
-                printText("\nEnd\n");
-                
-            } else if (serialChar == 'd') {
-                
-                //DE.64.50.A3.5F.76.26.2B.
-                //DE.64.50.A3.5F.76.26.2B.
-                
-                printText("Unique Id:\n");
-
-                uint8_t *mac = readUniqueId();
-                
-                for (uint8_t j=0; j<8; j++) {
-                    printNumbers(mac[j], HEX); 
-                    printText("."); 
-                }
-                printText("\nEnd\n");
-            }
-        }
-        LED = 0;
-        USBSerial_flush();
-        mDelaymS(10);
-    }
+  
+  setup();
+  loop();
+  
 }
-
-

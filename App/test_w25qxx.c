@@ -49,6 +49,7 @@ void testReadDeviceId() {
 
 void testReadUniqueId() {
     // ***********  Unique Id
+    // DE.64.50.A3.5F.76.26.2B.
     printText("Unique Id:\n");
     uint8_t *mac = readUniqueId();
     
@@ -143,23 +144,25 @@ void main()
     SPISetup();
 
 
-    blink(3);
+    //blink(3);
 
     mDelaymS(1000);
     
     while(1) {
 
+
+        blink(3);
         
-        //testReadDeviceId();
+        testReadDeviceId();
         //testReadUniqueId();
         //testReadByte();
         //testReadBytes();
         //testReadStatus();
 
 
-        testReadBytes();
-        testChipErase();
-        testReadBytes();
+        //testReadBytes();
+        //testChipErase();
+        //testReadBytes();
 
 
 

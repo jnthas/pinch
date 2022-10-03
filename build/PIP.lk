@@ -16,7 +16,7 @@
 -l libint
 -l liblong
 -l libfloat
-build/test_w25qxx.rel
+build/main.rel
 build/USBCDC.rel
 build/USBconstant.rel
 build/USBhandler.rel
