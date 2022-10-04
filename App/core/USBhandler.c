@@ -10,9 +10,9 @@ void setControlLineStateHandler();
 void USB_EP2_IN();
 void USB_EP2_OUT();
 
-__xdata __at (EP0_ADDR) uint8_t  Ep0Buffer[8];     
-__xdata __at (EP1_ADDR) uint8_t  Ep1Buffer[8];       //on page 47 of data sheet, the receive buffer need to be min(possible packet size+2,64)
-__xdata __at (EP2_ADDR) uint8_t  Ep2Buffer[128];     //IN and OUT buffer, must be even address
+__xdata uint8_t  Ep0Buffer[8];     
+__xdata uint8_t  Ep1Buffer[8];       //on page 47 of data sheet, the receive buffer need to be min(possible packet size+2,64)
+__xdata uint8_t  Ep2Buffer[128];     //IN and OUT buffer, must be even address
 
 
 uint16_t SetupLen;
@@ -98,27 +98,27 @@ void USB_EP0_SETUP(){
                         }
                         else if(UsbSetupBuf->wValueL == 1)
                         {
-                            pDescr = Manuf_Des;
+                            pDescr = (__code uint8_t *)Manuf_Des;
                             len = Manuf_DesLen;
                         }
                         else if(UsbSetupBuf->wValueL == 2)
                         {
-                            pDescr = Prod_Des;
+                            pDescr = (__code uint8_t *)Prod_Des;
                             len = Prod_DesLen;
                         }
                         else if(UsbSetupBuf->wValueL == 3)
                         {
-                            pDescr = SerDes;
+                            pDescr = (__code uint8_t *)SerDes;
                             len = SerDesLen;
                         }
                         else if(UsbSetupBuf->wValueL == 4)
                         {
-                            pDescr = CDC_Des;
+                            pDescr = (__code uint8_t *)CDC_Des;
                             len = CDC_DesLen;
                         }
                         else
                         {
-                            pDescr = SerDes;
+                            pDescr = (__code uint8_t *)SerDes;
                             len = SerDesLen;
                         }
                         break;

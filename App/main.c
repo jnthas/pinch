@@ -91,23 +91,68 @@ uint32_t getMemAddress(uint8_t slot, uint8_t sector_num, uint8_t page_num) {
 
 void storePayload(uint8_t payload) 
 {
-  // printText("Store: ");
-  // printNumbers(byteCount, DEC);
-  // printLineBreak();
+  uint32_t memAddress;
+
+  memset(_sbuffer, 0, 32*sizeof(*_sbuffer));
+
+  if (byteCount <= 1) {
+    memAddress = getMemAddress(_currentBlock, protocol.param-1, 0);      
+    writeByte(memAddress, protocol.param);
+
+    
+    memAddress = getMemAddress(_currentBlock, protocol.param-1, 1);    
+    writeByte(memAddress, protocol.payload_size);    
+
+    ///USBSerial_println("Payload: ");
+  }  
+  
+  memAddress = getMemAddress(_currentBlock, protocol.param-1, byteCount+1);
+  writeByte(memAddress, payload);
+  
+  mDelaymS(1);  
+  printText("Saving in address: ");
+  printNumbers(memAddress, HEX);
+  printLineBreak();
+  printNumbers(payload, HEX);
+  printText(",");
+  printLineBreak();
+
 }
 
 
 void loadData(uint8_t payload) 
-{   
-  printText("Load: ");
-  printNumbers(payload, HEX);
+{ 
+  printText("Load data from addr: ");
+  uint32_t memAddress = getMemAddress(_currentBlock, payload, 0);
+  uint8_t regCount = 0;
+    
+  printNumbers(memAddress, HEX);
+  printText("-");
+  printNumbers(memAddress+255, HEX);
+  printText(":");
+  printLineBreak();
+
+  for (uint8_t j=0; j<(256/32); j++) {
+  
+    readBytes(memAddress+(j*32), _sbuffer, 31);
+      
+    for (regCount=(j==0 ? 2 : 0); regCount<32; regCount++) {
+  
+      if (_sbuffer[regCount] == 0xff || _sbuffer[regCount] == 0x10) break;
+
+      printNumbers(_sbuffer[regCount], HEX);
+      printText(".");    
+    }
+
+    if (regCount < 31) break;
+  }
+
   printLineBreak();
 }
 
 
 void operationHandler(uint8_t payload) 
 {
-
   switch (protocol.operation) {
       
     case PINCH_STORE:
@@ -171,9 +216,9 @@ void loop()
             protocol.control_flag = cmdByte;
             current_state = operation;
 
-            // printText("Device Control: ");
-            // printNumbers(cmdByte, HEX);
-            // printLineBreak();
+            printText("Device Control: ");
+            printNumbers(cmdByte, HEX);
+            printLineBreak();
           }
           break;
 
@@ -182,9 +227,9 @@ void loop()
           protocol.operation = cmdByte;
           current_state = parameter;
 
-          // printText("Operation: ");
-          // printNumbers(cmdByte, HEX);
-          // printLineBreak();
+          printText("Operation: ");
+          printNumbers(cmdByte, HEX);
+          printLineBreak();
           break;
 
         case parameter:
@@ -198,16 +243,16 @@ void loop()
             protocol.payload_size = cmdByte;
             current_state = payload;
 
-            // printText("Param Size: ");
-            // printNumbers(cmdByte, DEC);
-            // printLineBreak();
+            printText("Param Size: ");
+            printNumbers(cmdByte, DEC);
+            printLineBreak();
           }
           else
           {
             protocol.param = cmdByte;
-            // printText("Param #: ");
-            // printNumbers(cmdByte, HEX);
-            // printLineBreak();
+            printText("Param #: ");
+            printNumbers(cmdByte, HEX);
+            printLineBreak();
           }
 
           break;
@@ -247,7 +292,6 @@ void loop()
           protocol.payload_size = 0;
           byteCount = 0;
           current_state = begin_of_transmission;
-          storePayload(0);
           printLineBreak();
           USBSerial_flush();
           break;

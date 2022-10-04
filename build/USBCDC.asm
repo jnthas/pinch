@@ -683,8 +683,12 @@ _setLineCodingHandler:
 	clr	a
 	addc	a,#(_LineCoding >> 8)
 	mov	r6,a
-	mov	dpl,r7
-	mov	dph,#(_Ep0Buffer >> 8)
+	mov	a,r7
+	add	a,#_Ep0Buffer
+	mov	dpl,a
+	clr	a
+	addc	a,#(_Ep0Buffer >> 8)
+	mov	dph,a
 	movx	a,@dptr
 	mov	r4,a
 	mov	dpl,r5
@@ -719,8 +723,12 @@ _getLineCodingHandler:
 	subb	a,#0x00
 	jnc	00101$
 ;	App/core/USBCDC.c:54: Ep0Buffer[i] = LineCoding[i];
-	mov	ar5,r7
-	mov	r6,#(_Ep0Buffer >> 8)
+	mov	a,r7
+	add	a,#_Ep0Buffer
+	mov	r5,a
+	clr	a
+	addc	a,#(_Ep0Buffer >> 8)
+	mov	r6,a
 	mov	a,r7
 	add	a,#_LineCoding
 	mov	dpl,a
@@ -975,9 +983,9 @@ _USBSerial_print_n:
 ;	App/core/USBCDC.c:120: if (controlLineState > 0) {
 	mov	dptr,#_controlLineState
 	movx	a,@dptr
-	jnz	00151$
+	jnz	00154$
 	ljmp	00116$
-00151$:
+00154$:
 ;	App/core/USBCDC.c:121: while (len>0){
 00112$:
 	mov	dptr,#_USBSerial_print_n_PARM_2
@@ -993,9 +1001,9 @@ _USBSerial_print_n:
 	mov	b,r7
 	xrl	b,#0x80
 	subb	a,b
-	jc	00152$
+	jc	00155$
 	ljmp	00116$
-00152$:
+00155$:
 ;	App/core/USBCDC.c:123: while (UpPoint2_Busy){//wait for 250ms or give up, on my mac it takes about 256us
 	mov	r6,#0x00
 	mov	r7,#0x00
@@ -1005,9 +1013,9 @@ _USBSerial_print_n:
 	jz	00126$
 ;	App/core/USBCDC.c:124: waitWriteCount++;
 	inc	r6
-	cjne	r6,#0x00,00154$
+	cjne	r6,#0x00,00157$
 	inc	r7
-00154$:
+00157$:
 ;	App/core/USBCDC.c:125: mDelayuS(5);   
 	mov	dptr,#0x0005
 	push	ar7
@@ -1054,8 +1062,8 @@ _USBSerial_print_n:
 	mov	dptr,#_usbWritePointer
 	movx	a,@dptr
 	mov	r2,a
-	cjne	r2,#0x40,00157$
-00157$:
+	cjne	r2,#0x40,00160$
+00160$:
 	jnc	00107$
 ;	App/core/USBCDC.c:130: Ep2Buffer[MAX_PACKET_SIZE+usbWritePointer] = *buf++;
 	mov	ar1,r2
@@ -1100,9 +1108,9 @@ _USBSerial_print_n:
 	movx	@dptr,a
 ;	App/core/USBCDC.c:132: len--;
 	dec	r3
-	cjne	r3,#0xff,00159$
+	cjne	r3,#0xff,00162$
 	dec	r4
-00159$:
+00162$:
 	mov	dptr,#_USBSerial_print_n_PARM_2
 	mov	a,r3
 	movx	@dptr,a

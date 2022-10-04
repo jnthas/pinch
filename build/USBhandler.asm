@@ -548,9 +548,12 @@ _usbMsgFlags::
 ; external ram data
 ;--------------------------------------------------------
 	.area XSEG    (XDATA)
-_Ep0Buffer	=	0x0000
-_Ep1Buffer	=	0x000a
-_Ep2Buffer	=	0x0014
+_Ep0Buffer::
+	.ds 8
+_Ep1Buffer::
+	.ds 8
+_Ep2Buffer::
+	.ds 128
 ;--------------------------------------------------------
 ; absolute external ram data
 ;--------------------------------------------------------
@@ -591,7 +594,7 @@ _Ep2Buffer	=	0x0014
 ;Allocation info for local variables in function 'USB_EP0_SETUP'
 ;------------------------------------------------------------
 ;len                       Allocated to registers r7 
-;i                         Allocated to registers r4 
+;i                         Allocated to registers r3 
 ;------------------------------------------------------------
 ;	App/core/USBhandler.c:27: void USB_EP0_SETUP(){
 ;	-----------------------------------------
@@ -644,16 +647,14 @@ _USB_EP0_SETUP:
 	anl	a,#0x60
 	jz	00201$
 ;	App/core/USBhandler.c:41: switch( ( UsbSetupBuf->bRequestType & USB_REQ_TYP_MASK ))
-	mov	dptr,#_Ep0Buffer
-	movx	a,@dptr
-	mov	r6,a
-	anl	ar6,#0x60
+	mov	ar4,r6
+	anl	ar4,#0x60
 	mov	r5,#0x00
-	cjne	r6,#0x20,00473$
+	cjne	r4,#0x20,00473$
 	cjne	r5,#0x00,00473$
 	sjmp	00104$
 00473$:
-	cjne	r6,#0x40,00110$
+	cjne	r4,#0x40,00110$
 	cjne	r5,#0x00,00110$
 ;	App/core/USBhandler.c:48: len = 0xFF;                                                                        //command not supported
 	mov	r7,#0xff
@@ -677,9 +678,9 @@ _USB_EP0_SETUP:
 00105$:
 ;	App/core/USBhandler.c:58: len = getLineCodingHandler();
 	lcall	_getLineCodingHandler
-	mov	r5,dpl
-	mov	r6,dph
-	mov	ar7,r5
+	mov	r4,dpl
+	mov	r5,dph
+	mov	ar7,r4
 ;	App/core/USBhandler.c:59: break;
 	ljmp	00205$
 ;	App/core/USBhandler.c:60: case SET_CONTROL_LINE_STATE:  //0x22  generates RS-232/V.24 style control signals
@@ -750,14 +751,14 @@ _USB_EP0_SETUP:
 ;	App/core/USBhandler.c:83: switch(UsbSetupBuf->wValueH)
 	mov	dptr,#(_Ep0Buffer + 0x0003)
 	movx	a,@dptr
-	mov	r6,a
-	cjne	r6,#0x01,00482$
+	mov	r5,a
+	cjne	r5,#0x01,00482$
 	sjmp	00113$
 00482$:
-	cjne	r6,#0x02,00483$
+	cjne	r5,#0x02,00483$
 	sjmp	00114$
 00483$:
-	cjne	r6,#0x03,00484$
+	cjne	r5,#0x03,00484$
 	sjmp	00115$
 00484$:
 	ljmp	00131$
@@ -770,11 +771,11 @@ _USB_EP0_SETUP:
 	mov	dptr,#_DevDescLen
 	clr	a
 	movc	a,@a+dptr
-	mov	r5,a
+	mov	r4,a
 	mov	a,#0x01
 	movc	a,@a+dptr
-	mov	r6,a
-	mov	ar7,r5
+	mov	r5,a
+	mov	ar7,r4
 ;	App/core/USBhandler.c:88: break;
 	ljmp	00132$
 ;	App/core/USBhandler.c:89: case 2:                                                        //Configure Descriptor
@@ -786,11 +787,11 @@ _USB_EP0_SETUP:
 	mov	dptr,#_CfgDescLen
 	clr	a
 	movc	a,@a+dptr
-	mov	r5,a
+	mov	r4,a
 	mov	a,#0x01
 	movc	a,@a+dptr
-	mov	r6,a
-	mov	ar7,r5
+	mov	r5,a
+	mov	ar7,r4
 ;	App/core/USBhandler.c:92: break;
 	ljmp	00132$
 ;	App/core/USBhandler.c:93: case 3:
@@ -806,101 +807,101 @@ _USB_EP0_SETUP:
 	mov	dptr,#_LangDesLen
 	clr	a
 	movc	a,@a+dptr
-	mov	r5,a
+	mov	r4,a
 	mov	a,#0x01
 	movc	a,@a+dptr
-	mov	r6,a
-	mov	ar7,r5
+	mov	r5,a
+	mov	ar7,r4
 	ljmp	00132$
 00129$:
 ;	App/core/USBhandler.c:99: else if(UsbSetupBuf->wValueL == 1)
 	mov	dptr,#(_Ep0Buffer + 0x0002)
 	movx	a,@dptr
-	mov	r6,a
-	cjne	r6,#0x01,00126$
-;	App/core/USBhandler.c:101: pDescr = Manuf_Des;
+	mov	r5,a
+	cjne	r5,#0x01,00126$
+;	App/core/USBhandler.c:101: pDescr = (__code uint8_t *)Manuf_Des;
 	mov	_pDescr,#_Manuf_Des
 	mov	(_pDescr + 1),#(_Manuf_Des >> 8)
 ;	App/core/USBhandler.c:102: len = Manuf_DesLen;
 	mov	dptr,#_Manuf_DesLen
 	clr	a
 	movc	a,@a+dptr
-	mov	r5,a
+	mov	r4,a
 	mov	a,#0x01
 	movc	a,@a+dptr
-	mov	r6,a
-	mov	ar7,r5
+	mov	r5,a
+	mov	ar7,r4
 	sjmp	00132$
 00126$:
 ;	App/core/USBhandler.c:104: else if(UsbSetupBuf->wValueL == 2)
 	mov	dptr,#(_Ep0Buffer + 0x0002)
 	movx	a,@dptr
-	mov	r6,a
-	cjne	r6,#0x02,00123$
-;	App/core/USBhandler.c:106: pDescr = Prod_Des;
+	mov	r5,a
+	cjne	r5,#0x02,00123$
+;	App/core/USBhandler.c:106: pDescr = (__code uint8_t *)Prod_Des;
 	mov	_pDescr,#_Prod_Des
 	mov	(_pDescr + 1),#(_Prod_Des >> 8)
 ;	App/core/USBhandler.c:107: len = Prod_DesLen;
 	mov	dptr,#_Prod_DesLen
 	clr	a
 	movc	a,@a+dptr
-	mov	r5,a
+	mov	r4,a
 	mov	a,#0x01
 	movc	a,@a+dptr
-	mov	r6,a
-	mov	ar7,r5
+	mov	r5,a
+	mov	ar7,r4
 	sjmp	00132$
 00123$:
 ;	App/core/USBhandler.c:109: else if(UsbSetupBuf->wValueL == 3)
 	mov	dptr,#(_Ep0Buffer + 0x0002)
 	movx	a,@dptr
-	mov	r6,a
-	cjne	r6,#0x03,00120$
-;	App/core/USBhandler.c:111: pDescr = SerDes;
+	mov	r5,a
+	cjne	r5,#0x03,00120$
+;	App/core/USBhandler.c:111: pDescr = (__code uint8_t *)SerDes;
 	mov	_pDescr,#_SerDes
 	mov	(_pDescr + 1),#(_SerDes >> 8)
 ;	App/core/USBhandler.c:112: len = SerDesLen;
 	mov	dptr,#_SerDesLen
 	clr	a
 	movc	a,@a+dptr
-	mov	r5,a
+	mov	r4,a
 	mov	a,#0x01
 	movc	a,@a+dptr
-	mov	r6,a
-	mov	ar7,r5
+	mov	r5,a
+	mov	ar7,r4
 	sjmp	00132$
 00120$:
 ;	App/core/USBhandler.c:114: else if(UsbSetupBuf->wValueL == 4)
 	mov	dptr,#(_Ep0Buffer + 0x0002)
 	movx	a,@dptr
-	mov	r6,a
-	cjne	r6,#0x04,00117$
-;	App/core/USBhandler.c:116: pDescr = CDC_Des;
+	mov	r5,a
+	cjne	r5,#0x04,00117$
+;	App/core/USBhandler.c:116: pDescr = (__code uint8_t *)CDC_Des;
 	mov	_pDescr,#_CDC_Des
 	mov	(_pDescr + 1),#(_CDC_Des >> 8)
 ;	App/core/USBhandler.c:117: len = CDC_DesLen;
 	mov	dptr,#_CDC_DesLen
 	clr	a
 	movc	a,@a+dptr
-	mov	r5,a
+	mov	r4,a
 	mov	a,#0x01
 	movc	a,@a+dptr
-	mov	r6,a
-	mov	ar7,r5
+	mov	r5,a
+	mov	ar7,r4
 	sjmp	00132$
 00117$:
-;	App/core/USBhandler.c:121: pDescr = SerDes;
+;	App/core/USBhandler.c:121: pDescr = (__code uint8_t *)SerDes;
 	mov	_pDescr,#_SerDes
 	mov	(_pDescr + 1),#(_SerDes >> 8)
 ;	App/core/USBhandler.c:122: len = SerDesLen;
 	mov	dptr,#_SerDesLen
 	clr	a
 	movc	a,@a+dptr
-	mov	r5,a
+	mov	r4,a
 	mov	a,#0x01
 	movc	a,@a+dptr
-	mov	r6,a
-	mov	ar7,r5
+	mov	r5,a
+	mov	ar7,r4
 ;	App/core/USBhandler.c:124: break;
 ;	App/core/USBhandler.c:125: default:
 	sjmp	00132$
@@ -914,46 +915,50 @@ _USB_EP0_SETUP:
 	ljmp	00205$
 00494$:
 ;	App/core/USBhandler.c:130: if ( SetupLen > len )
-	mov	ar5,r7
-	mov	r6,#0x00
+	mov	ar4,r7
+	mov	r5,#0x00
 	clr	c
-	mov	a,r5
+	mov	a,r4
 	subb	a,_SetupLen
-	mov	a,r6
+	mov	a,r5
 	subb	a,(_SetupLen + 1)
 	jnc	00134$
 ;	App/core/USBhandler.c:132: SetupLen = len;    // Limit length
-	mov	_SetupLen,r5
-	mov	(_SetupLen + 1),r6
+	mov	_SetupLen,r4
+	mov	(_SetupLen + 1),r5
 00134$:
 ;	App/core/USBhandler.c:134: len = SetupLen >= DEFAULT_ENDP0_SIZE ? DEFAULT_ENDP0_SIZE : SetupLen;                            //transmit length for this packet
-	mov	r5,_SetupLen
-	mov	r6,(_SetupLen + 1)
-	clr	c
-	mov	a,r5
-	subb	a,#0x08
-	mov	a,r6
-	subb	a,#0x00
-	jc	00217$
-	mov	r3,#0x08
-	mov	r4,#0x00
-	sjmp	00218$
-00217$:
-	mov	r3,_SetupLen
-	mov	r4,(_SetupLen + 1)
-00218$:
-	mov	ar7,r3
-;	App/core/USBhandler.c:135: for (uint8_t i=0;i<len;i++){
-	mov	r4,#0x00
-00213$:
+	mov	r4,_SetupLen
+	mov	r5,(_SetupLen + 1)
 	clr	c
 	mov	a,r4
+	subb	a,#0x08
+	mov	a,r5
+	subb	a,#0x00
+	jc	00217$
+	mov	r2,#0x08
+	mov	r3,#0x00
+	sjmp	00218$
+00217$:
+	mov	r2,_SetupLen
+	mov	r3,(_SetupLen + 1)
+00218$:
+	mov	ar7,r2
+;	App/core/USBhandler.c:135: for (uint8_t i=0;i<len;i++){
+	mov	r3,#0x00
+00213$:
+	clr	c
+	mov	a,r3
 	subb	a,r7
 	jnc	00135$
 ;	App/core/USBhandler.c:136: Ep0Buffer[i] = pDescr[i];
-	mov	ar2,r4
-	mov	r3,#(_Ep0Buffer >> 8)
-	mov	a,r4
+	mov	a,r3
+	add	a,#_Ep0Buffer
+	mov	r1,a
+	clr	a
+	addc	a,#(_Ep0Buffer >> 8)
+	mov	r2,a
+	mov	a,r3
 	add	a,_pDescr
 	mov	dpl,a
 	clr	a
@@ -961,26 +966,26 @@ _USB_EP0_SETUP:
 	mov	dph,a
 	clr	a
 	movc	a,@a+dptr
-	mov	r1,a
-	mov	dpl,r2
-	mov	dph,r3
+	mov	r0,a
+	mov	dpl,r1
+	mov	dph,r2
 	movx	@dptr,a
 ;	App/core/USBhandler.c:135: for (uint8_t i=0;i<len;i++){
-	inc	r4
+	inc	r3
 	sjmp	00213$
 00135$:
 ;	App/core/USBhandler.c:138: SetupLen -= len;
-	mov	ar3,r7
-	mov	r4,#0x00
-	mov	a,r5
+	mov	ar2,r7
+	mov	r3,#0x00
+	mov	a,r4
 	clr	c
+	subb	a,r2
+	mov	r4,a
+	mov	a,r5
 	subb	a,r3
 	mov	r5,a
-	mov	a,r6
-	subb	a,r4
-	mov	r6,a
-	mov	_SetupLen,r5
-	mov	(_SetupLen + 1),r6
+	mov	_SetupLen,r4
+	mov	(_SetupLen + 1),r5
 ;	App/core/USBhandler.c:139: pDescr += len;
 	mov	a,r7
 	add	a,_pDescr
@@ -995,8 +1000,8 @@ _USB_EP0_SETUP:
 ;	App/core/USBhandler.c:143: SetupLen = UsbSetupBuf->wValueL;                              // Save the assigned address
 	mov	dptr,#(_Ep0Buffer + 0x0002)
 	movx	a,@dptr
-	mov	r6,a
-	mov	_SetupLen,r6
+	mov	r5,a
+	mov	_SetupLen,r5
 	mov	(_SetupLen + 1),#0x00
 ;	App/core/USBhandler.c:144: break;
 	ljmp	00205$
@@ -1007,12 +1012,12 @@ _USB_EP0_SETUP:
 	mov	a,_UsbConfig
 	movx	@dptr,a
 ;	App/core/USBhandler.c:147: if ( SetupLen >= 1 )
-	mov	r5,_SetupLen
-	mov	r6,(_SetupLen + 1)
+	mov	r4,_SetupLen
+	mov	r5,(_SetupLen + 1)
 	clr	c
-	mov	a,r5
+	mov	a,r4
 	subb	a,#0x01
-	mov	a,r6
+	mov	a,r5
 	subb	a,#0x00
 	jnc	00498$
 	ljmp	00205$
@@ -1032,29 +1037,28 @@ _USB_EP0_SETUP:
 ;	App/core/USBhandler.c:159: case USB_CLEAR_FEATURE:                                            //Clear Feature
 00145$:
 ;	App/core/USBhandler.c:160: if( ( UsbSetupBuf->bRequestType & 0x1F ) == USB_REQ_RECIP_DEVICE )                  // Clear the device featuee.
-	mov	dptr,#_Ep0Buffer
-	movx	a,@dptr
+	mov	a,r6
 	anl	a,#0x1f
 	jnz	00166$
 ;	App/core/USBhandler.c:162: if( ( ( ( uint16_t )UsbSetupBuf->wValueH << 8 ) | UsbSetupBuf->wValueL ) == 0x01 )
 	mov	dptr,#(_Ep0Buffer + 0x0003)
 	movx	a,@dptr
-	mov	r5,a
-	mov	r6,#0x00
+	mov	r4,a
+	mov	r5,#0x00
 	mov	dptr,#(_Ep0Buffer + 0x0002)
 	movx	a,@dptr
-	mov	r4,a
-	mov	r3,#0x00
-	orl	ar6,a
-	mov	a,r3
+	mov	r3,a
+	mov	r2,#0x00
 	orl	ar5,a
-	cjne	r6,#0x01,00150$
-	cjne	r5,#0x00,00150$
+	mov	a,r2
+	orl	ar4,a
+	cjne	r5,#0x01,00150$
+	cjne	r4,#0x00,00150$
 ;	App/core/USBhandler.c:164: if( CfgDesc[ 7 ] & 0x20 )
 	mov	dptr,#(_CfgDesc + 0x0007)
 	clr	a
 	movc	a,@a+dptr
-	mov	r6,a
+	mov	r5,a
 	jnb	acc.5,00503$
 	ljmp	00205$
 00503$:
@@ -1067,39 +1071,37 @@ _USB_EP0_SETUP:
 	ljmp	00205$
 00166$:
 ;	App/core/USBhandler.c:178: else if ( ( UsbSetupBuf->bRequestType & USB_REQ_RECIP_MASK ) == USB_REQ_RECIP_ENDP )// endpoint
-	mov	dptr,#_Ep0Buffer
-	movx	a,@dptr
-	mov	r6,a
-	anl	ar6,#0x1f
+	mov	ar4,r6
+	anl	ar4,#0x1f
 	mov	r5,#0x00
-	cjne	r6,#0x02,00163$
+	cjne	r4,#0x02,00163$
 	cjne	r5,#0x00,00163$
 ;	App/core/USBhandler.c:180: switch( UsbSetupBuf->wIndexL )
 	mov	dptr,#(_Ep0Buffer + 0x0004)
 	movx	a,@dptr
-	mov	r6,a
-	cjne	r6,#0x01,00506$
+	mov	r5,a
+	cjne	r5,#0x01,00506$
 	sjmp	00159$
 00506$:
-	cjne	r6,#0x02,00507$
+	cjne	r5,#0x02,00507$
 	sjmp	00157$
 00507$:
-	cjne	r6,#0x03,00508$
+	cjne	r5,#0x03,00508$
 	sjmp	00155$
 00508$:
-	cjne	r6,#0x04,00509$
+	cjne	r5,#0x04,00509$
 	sjmp	00153$
 00509$:
-	cjne	r6,#0x81,00510$
+	cjne	r5,#0x81,00510$
 	sjmp	00158$
 00510$:
-	cjne	r6,#0x82,00511$
+	cjne	r5,#0x82,00511$
 	sjmp	00156$
 00511$:
-	cjne	r6,#0x83,00512$
+	cjne	r5,#0x83,00512$
 	sjmp	00154$
 00512$:
-	cjne	r6,#0x84,00160$
+	cjne	r5,#0x84,00160$
 ;	App/core/USBhandler.c:183: UEP4_CTRL = UEP4_CTRL & ~ ( bUEP_T_TOG | MASK_UEP_T_RES ) | UEP_T_RES_NAK;
 	mov	a,#0xbc
 	anl	a,_UEP4_CTRL
@@ -1172,29 +1174,28 @@ _USB_EP0_SETUP:
 ;	App/core/USBhandler.c:216: case USB_SET_FEATURE:                                          // Set Feature
 00168$:
 ;	App/core/USBhandler.c:217: if( ( UsbSetupBuf->bRequestType & 0x1F ) == USB_REQ_RECIP_DEVICE )                  // Set  the device featuee.
-	mov	dptr,#_Ep0Buffer
-	movx	a,@dptr
+	mov	a,r6
 	anl	a,#0x1f
 	jnz	00192$
 ;	App/core/USBhandler.c:219: if( ( ( ( uint16_t )UsbSetupBuf->wValueH << 8 ) | UsbSetupBuf->wValueL ) == 0x01 )
 	mov	dptr,#(_Ep0Buffer + 0x0003)
 	movx	a,@dptr
-	mov	r5,a
-	mov	r6,#0x00
+	mov	r4,a
+	mov	r5,#0x00
 	mov	dptr,#(_Ep0Buffer + 0x0002)
 	movx	a,@dptr
-	mov	r4,a
-	mov	r3,#0x00
-	orl	ar6,a
-	mov	a,r3
+	mov	r3,a
+	mov	r2,#0x00
 	orl	ar5,a
-	cjne	r6,#0x01,00173$
-	cjne	r5,#0x00,00173$
+	mov	a,r2
+	orl	ar4,a
+	cjne	r5,#0x01,00173$
+	cjne	r4,#0x00,00173$
 ;	App/core/USBhandler.c:221: if( CfgDesc[ 7 ] & 0x20 )
 	mov	dptr,#(_CfgDesc + 0x0007)
 	clr	a
 	movc	a,@a+dptr
-	mov	r6,a
+	mov	r5,a
 	jnb	acc.5,00519$
 	ljmp	00205$
 00519$:
@@ -1207,9 +1208,6 @@ _USB_EP0_SETUP:
 	ljmp	00205$
 00192$:
 ;	App/core/USBhandler.c:244: else if( ( UsbSetupBuf->bRequestType & 0x1F ) == USB_REQ_RECIP_ENDP )             //endpoint
-	mov	dptr,#_Ep0Buffer
-	movx	a,@dptr
-	mov	r6,a
 	anl	ar6,#0x1f
 	mov	r5,#0x00
 	cjne	r6,#0x02,00520$
@@ -1462,8 +1460,12 @@ _USB_EP0_IN:
 	subb	a,r4
 	jnc	00102$
 ;	App/core/USBhandler.c:334: Ep0Buffer[i] = pDescr[i];
-	mov	ar2,r5
-	mov	r3,#(_Ep0Buffer >> 8)
+	mov	a,r5
+	add	a,#_Ep0Buffer
+	mov	r2,a
+	clr	a
+	addc	a,#(_Ep0Buffer >> 8)
+	mov	r3,a
 	mov	a,r5
 	add	a,_pDescr
 	mov	dpl,a

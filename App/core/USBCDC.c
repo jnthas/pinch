@@ -5,8 +5,8 @@
 #include "USBconstant.h"
 #include "USBhandler.h"
 
-extern __xdata __at (EP0_ADDR) uint8_t  Ep0Buffer[];
-extern __xdata __at (EP2_ADDR) uint8_t  Ep2Buffer[];
+extern __xdata uint8_t Ep0Buffer[];
+extern __xdata uint8_t Ep2Buffer[];
 
 #define LINE_CODEING_SIZE 7
 __xdata uint8_t LineCoding[LINE_CODEING_SIZE]={0x00,0xe1,0x00,0x00,0x00,0x00,0x08};   //Initialize for baudrate 57600, 1 stopbit, No parity, eight data bits
