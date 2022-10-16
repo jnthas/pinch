@@ -110,38 +110,41 @@ void storePayload(uint8_t payload)
   writeByte(memAddress, payload);
   
   mDelaymS(1);  
-  printText("Saving in address: ");
-  printNumbers(memAddress, HEX);
-  printLineBreak();
-  printNumbers(payload, HEX);
-  printText(",");
-  printLineBreak();
+  //printText("Saving in address: ");
+  //printNumbers(memAddress, HEX);
+  //printLineBreak();
+  //printNumbers(payload, HEX);
+  //printText(",");
+  //printLineBreak();
 
 }
 
 
 void loadData(uint8_t payload) 
 { 
-  printText("Load data from addr: ");
+  //printText("Load data from addr: ");
   uint32_t memAddress = getMemAddress(_currentBlock, payload, 0);
   uint8_t regCount = 0;
     
-  printNumbers(memAddress, HEX);
-  printText("-");
-  printNumbers(memAddress+255, HEX);
-  printText(":");
-  printLineBreak();
+  //printNumbers(memAddress, HEX);
+  //printText("-");
+  //printNumbers(memAddress+255, HEX);
+  //printText(":");
+  //printLineBreak();
 
   for (uint8_t j=0; j<(256/32); j++) {
   
     readBytes(memAddress+(j*32), _sbuffer, 31);
       
-    for (regCount=(j==0 ? 2 : 0); regCount<32; regCount++) {
-  
-      if (_sbuffer[regCount] == 0xff || _sbuffer[regCount] == 0x10) break;
+    for (regCount=0; regCount<32; regCount++) {
+      if (_sbuffer[regCount] == 0xff || _sbuffer[regCount] == PINCH_DLE) break;
+    }
 
-      printNumbers(_sbuffer[regCount], HEX);
-      printText(".");    
+    if (j == 0) {
+      // skips the first two bytes, param number and param size
+      printTextArray(2+_sbuffer, regCount-2);
+    } else {
+      printTextArray(_sbuffer, regCount);
     }
 
     if (regCount < 31) break;
@@ -151,7 +154,7 @@ void loadData(uint8_t payload)
 }
 
 
-void operationHandler(uint8_t payload) 
+void operationHandler(uint8_t payload)
 {
   switch (protocol.operation) {
       
@@ -216,9 +219,9 @@ void loop()
             protocol.control_flag = cmdByte;
             current_state = operation;
 
-            printText("Device Control: ");
-            printNumbers(cmdByte, HEX);
-            printLineBreak();
+            //printText("Device Control: ");
+            //printNumbers(cmdByte, HEX);
+            //printLineBreak();
           }
           break;
 
@@ -227,9 +230,9 @@ void loop()
           protocol.operation = cmdByte;
           current_state = parameter;
 
-          printText("Operation: ");
-          printNumbers(cmdByte, HEX);
-          printLineBreak();
+          //printText("Operation: ");
+          //printNumbers(cmdByte, HEX);
+          //printLineBreak();
           break;
 
         case parameter:
@@ -243,16 +246,16 @@ void loop()
             protocol.payload_size = cmdByte;
             current_state = payload;
 
-            printText("Param Size: ");
-            printNumbers(cmdByte, DEC);
-            printLineBreak();
+            //printText("Param Size: ");
+            //printNumbers(cmdByte, DEC);
+            //printLineBreak();
           }
           else
           {
             protocol.param = cmdByte;
-            printText("Param #: ");
-            printNumbers(cmdByte, HEX);
-            printLineBreak();
+            //printText("Param #: ");
+            //printNumbers(cmdByte, HEX);
+            //printLineBreak();
           }
 
           break;
@@ -272,7 +275,7 @@ void loop()
             {
               current_state = payload_error;
             }
-            printLineBreak();
+            //printLineBreak();
             byteCount = 0;
           }
           else
@@ -292,12 +295,12 @@ void loop()
           protocol.payload_size = 0;
           byteCount = 0;
           current_state = begin_of_transmission;
-          printLineBreak();
+          //printLineBreak();
           USBSerial_flush();
           break;
 
         case payload_error:
-          printLineBreak();
+          //printLineBreak();
           USBSerial_flush();
           printText("ERROR!");
           // TODO format block

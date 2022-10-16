@@ -16,11 +16,12 @@
 -l libint
 -l liblong
 -l libfloat
-build/main.rel
+build/test_display.rel
 build/USBCDC.rel
 build/USBconstant.rel
 build/USBhandler.rel
 build/Print.rel
+build/GPIO.rel
 build/w25qxx.rel
 build/debug.rel
 build/spi.rel

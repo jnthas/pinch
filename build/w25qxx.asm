@@ -620,9 +620,8 @@ _SPISetup:
 	lcall	_SPIMasterModeSet
 ;	App/flash/w25qxx.c:7: SPI_CK_SET(2);       // divide by 2, fastest
 	mov	_SPI0_CK_SE,#0x02
-;	App/flash/w25qxx.c:8: SCS = 1;
-;	assignBit
-	setb	_SCS
+;	App/flash/w25qxx.c:8: unselect();
+	lcall	_unselect
 ;	App/flash/w25qxx.c:9: wakeup();
 ;	App/flash/w25qxx.c:10: }
 	ljmp	_wakeup

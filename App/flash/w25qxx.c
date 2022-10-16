@@ -5,7 +5,7 @@ void SPISetup()
 {
   SPIMasterModeSet(3); // SPI master mode setting, mode 3
   SPI_CK_SET(2);       // divide by 2, fastest
-  SCS = 1;
+  unselect();
   wakeup();
 }
 

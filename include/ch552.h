@@ -190,6 +190,10 @@ SFR(P1,	0x90);	// port 1 input & output
    SBIT(T2_,	0x90, 4);	// alternate pin for T2
    SBIT(CAP1_,	0x90, 4);	// alternate pin for CAP1
    SBIT(SCS,	0x90, 4);	// slave chip-selection input for SPI0
+
+   
+
+
    SBIT(TIN2,	0x90, 4);	// TIN2 for Touch-Key
    SBIT(UCC1,	0x90, 4);	// CC1 for USB type-C
    SBIT(AIN1,	0x90, 4);	// AIN1 for ADC
@@ -243,7 +247,8 @@ SFR(P3,	0xB0);	// port 3 input & output
    SBIT(TXD1_,	0xB0, 2);	// alternate pin for TXD1
    SBIT(INT0,	0xB0, 2);	// external interrupt 0 input
    SBIT(VBUS1,	0xB0, 2);	// VBUS1 for USB type-C
-   SBIT(AIN3,	0xB0, 2);	// AIN3 for ADC
+   SBIT(AIN3,	0xB0, 2);	// AIN3 for ADC   
+
    SBIT(PWM2_,	0xB0, 1);	// alternate pin for PWM2
    SBIT(TXD,	0xB0, 1);	// TXD output for UART0
    SBIT(PWM1_,	0xB0, 0);	// alternate pin for PWM1
