@@ -9,7 +9,7 @@
 #include "core/USBCDC.h"
 #include "core/Print.h"
 #include "core/GPIO.h"
-#include "flash/w25qxx.h"
+#include "components/w25qxx.h"
 
 
 //P1 = 0x90

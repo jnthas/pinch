@@ -8,7 +8,7 @@
 #include "debug.h"
 #include "core/USBCDC.h"
 #include "core/Print.h"
-#include "flash/w25qxx.h"
+#include "components/w25qxx.h"
 
 
 #define LED_PIN 0

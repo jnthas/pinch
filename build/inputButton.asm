@@ -2,36 +2,15 @@
 ; File Created by SDCC : free open source ANSI-C Compiler
 ; Version 4.0.0 #11528 (Linux)
 ;--------------------------------------------------------
-	.module test_display
+	.module inputButton
 	.optsdcc -mmcs51 --model-small
 	
 ;--------------------------------------------------------
 ; Public variables in this module
 ;--------------------------------------------------------
-	.globl _main
-	.globl _testReadBytes
-	.globl _testReadDeviceId
-	.globl _countTo1000
-	.globl _millis
-	.globl _DeviceUSBInterrupt
-	.globl _USBInterrupt
-	.globl _Button_C_press
-	.globl _Button_B_press
-	.globl _Button_A_press
-	.globl _Button_setup
-	.globl _Display_printNumber
-	.globl _Display_clear
-	.globl _Display_update
-	.globl _Display_setDigit
-	.globl _Display_setup
-	.globl _readBytes
-	.globl _SPISetup
-	.globl _readDeviceId
-	.globl _printNumbers
-	.globl _printText
-	.globl _USBInit
-	.globl _mDelaymS
-	.globl _CfgFsys
+	.globl _analogRead
+	.globl _p3Mode
+	.globl _p1Mode
 	.globl _UIF_BUS_RST
 	.globl _UIF_TRANSFER
 	.globl _UIF_SUSPEND
@@ -264,7 +243,15 @@
 	.globl _B
 	.globl _ACC
 	.globl _PSW
-	.globl _lastMillis
+	.globl _buttonBPressed
+	.globl _buttonAPressed
+	.globl _Button_setup
+	.globl _Button_A_press
+	.globl _Button_A_release
+	.globl _Button_B_press
+	.globl _Button_B_release
+	.globl _Button_C_press
+	.globl _Button_C_release
 ;--------------------------------------------------------
 ; special function registers
 ;--------------------------------------------------------
@@ -513,35 +500,16 @@ _UIF_BUS_RST	=	0x00d8
 	.area REG_BANK_0	(REL,OVR,DATA)
 	.ds 8
 ;--------------------------------------------------------
-; overlayable bit register bank
-;--------------------------------------------------------
-	.area BIT_BANK	(REL,OVR,DATA)
-bits:
-	.ds 1
-	b0 = bits[0]
-	b1 = bits[1]
-	b2 = bits[2]
-	b3 = bits[3]
-	b4 = bits[4]
-	b5 = bits[5]
-	b6 = bits[6]
-	b7 = bits[7]
-;--------------------------------------------------------
 ; internal ram data
 ;--------------------------------------------------------
 	.area DSEG    (DATA)
-_lastMillis::
-	.ds 4
+_buttonAPressed::
+	.ds 1
+_buttonBPressed::
+	.ds 1
 ;--------------------------------------------------------
 ; overlayable items in internal ram 
 ;--------------------------------------------------------
-;--------------------------------------------------------
-; Stack segment in internal ram 
-;--------------------------------------------------------
-	.area	SSEG
-__start__stack:
-	.ds	1
-
 ;--------------------------------------------------------
 ; indirectly addressable internal ram data
 ;--------------------------------------------------------
@@ -563,8 +531,6 @@ __start__stack:
 ; external ram data
 ;--------------------------------------------------------
 	.area XSEG    (XDATA)
-__sbuffer:
-	.ds 32
 ;--------------------------------------------------------
 ; absolute external ram data
 ;--------------------------------------------------------
@@ -573,8 +539,6 @@ __sbuffer:
 ; external initialized ram data
 ;--------------------------------------------------------
 	.area XISEG   (XDATA)
-_UNIQUEID:
-	.ds 8
 	.area HOME    (CODE)
 	.area GSINIT0 (CODE)
 	.area GSINIT1 (CODE)
@@ -586,69 +550,33 @@ _UNIQUEID:
 	.area GSFINAL (CODE)
 	.area CSEG    (CODE)
 ;--------------------------------------------------------
-; interrupt vector 
-;--------------------------------------------------------
-	.area HOME    (CODE)
-__interrupt_vect:
-	ljmp	__sdcc_gsinit_startup
-	reti
-	.ds	7
-	reti
-	.ds	7
-	reti
-	.ds	7
-	reti
-	.ds	7
-	reti
-	.ds	7
-	reti
-	.ds	7
-	reti
-	.ds	7
-	reti
-	.ds	7
-	ljmp	_DeviceUSBInterrupt
-;--------------------------------------------------------
 ; global & static initialisations
 ;--------------------------------------------------------
 	.area HOME    (CODE)
 	.area GSINIT  (CODE)
 	.area GSFINAL (CODE)
 	.area GSINIT  (CODE)
-	.globl __sdcc_gsinit_startup
-	.globl __sdcc_program_startup
-	.globl __start__stack
-	.globl __mcs51_genXINIT
-	.globl __mcs51_genXRAMCLEAR
-	.globl __mcs51_genRAMCLEAR
-;	App/test_display.c:14: unsigned long lastMillis = 0;
-	clr	a
-	mov	_lastMillis,a
-	mov	(_lastMillis + 1),a
-	mov	(_lastMillis + 2),a
-	mov	(_lastMillis + 3),a
-	.area GSFINAL (CODE)
-	ljmp	__sdcc_program_startup
+;	App/components/inputButton.c:6: bool buttonAPressed = false;
+	mov	_buttonAPressed,#0x00
+;	App/components/inputButton.c:7: bool buttonBPressed = false;
+	mov	_buttonBPressed,#0x00
 ;--------------------------------------------------------
 ; Home
 ;--------------------------------------------------------
 	.area HOME    (CODE)
 	.area HOME    (CODE)
-__sdcc_program_startup:
-	ljmp	_main
-;	return from main will return to caller
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CSEG    (CODE)
 ;------------------------------------------------------------
-;Allocation info for local variables in function 'DeviceUSBInterrupt'
+;Allocation info for local variables in function 'Button_setup'
 ;------------------------------------------------------------
-;	App/test_display.c:19: void DeviceUSBInterrupt(void) __interrupt (INT_NO_USB)                       //USB interrupt service
+;	App/components/inputButton.c:9: void Button_setup() {
 ;	-----------------------------------------
-;	 function DeviceUSBInterrupt
+;	 function Button_setup
 ;	-----------------------------------------
-_DeviceUSBInterrupt:
+_Button_setup:
 	ar7 = 0x07
 	ar6 = 0x06
 	ar5 = 0x05
@@ -657,456 +585,166 @@ _DeviceUSBInterrupt:
 	ar2 = 0x02
 	ar1 = 0x01
 	ar0 = 0x00
-	push	bits
-	push	acc
-	push	b
-	push	dpl
-	push	dph
-	push	(0+7)
-	push	(0+6)
-	push	(0+5)
-	push	(0+4)
-	push	(0+3)
-	push	(0+2)
-	push	(0+1)
-	push	(0+0)
-	push	psw
-	mov	psw,#0x00
-;	App/test_display.c:21: USBInterrupt();
-	lcall	_USBInterrupt
-;	App/test_display.c:22: }
-	pop	psw
-	pop	(0+0)
-	pop	(0+1)
-	pop	(0+2)
-	pop	(0+3)
-	pop	(0+4)
-	pop	(0+5)
-	pop	(0+6)
-	pop	(0+7)
-	pop	dph
-	pop	dpl
-	pop	b
-	pop	acc
-	pop	bits
-	reti
-;------------------------------------------------------------
-;Allocation info for local variables in function 'millis'
-;------------------------------------------------------------
-;	App/test_display.c:24: uint16_t millis()
-;	-----------------------------------------
-;	 function millis
-;	-----------------------------------------
-_millis:
-;	App/test_display.c:26: return 0;
-	mov	dptr,#0x0000
-;	App/test_display.c:27: }
-	ret
-;------------------------------------------------------------
-;Allocation info for local variables in function 'countTo1000'
-;------------------------------------------------------------
-;curpos                    Allocated to registers r5 r6 r7 
-;------------------------------------------------------------
-;	App/test_display.c:29: void countTo1000(uint8_t* curpos) {
-;	-----------------------------------------
-;	 function countTo1000
-;	-----------------------------------------
-_countTo1000:
-	mov	r5,dpl
-	mov	r6,dph
-	mov	r7,b
-;	App/test_display.c:30: if (lastMillis - millis() >= 50) {
-	push	ar7
-	push	ar6
-	push	ar5
-	lcall	_millis
-	mov	r3,dpl
-	mov	r4,dph
-	pop	ar5
-	pop	ar6
-	pop	ar7
-	mov	ar1,r3
-	mov	ar2,r4
+;	App/components/inputButton.c:11: p3Mode(2, INPUT);
+	mov	dptr,#_p3Mode_PARM_2
 	clr	a
-	mov	r3,a
-	mov	r4,a
-	mov	a,_lastMillis
-	clr	c
-	subb	a,r1
-	mov	r1,a
-	mov	a,(_lastMillis + 1)
-	subb	a,r2
-	mov	r2,a
-	mov	a,(_lastMillis + 2)
-	subb	a,r3
-	mov	r3,a
-	mov	a,(_lastMillis + 3)
-	subb	a,r4
-	mov	r4,a
-	clr	c
-	mov	a,r1
-	subb	a,#0x32
-	mov	a,r2
-	subb	a,#0x00
-	mov	a,r3
-	subb	a,#0x00
-	mov	a,r4
-	subb	a,#0x00
-	jc	00103$
-;	App/test_display.c:31: Display_printNumber((*curpos)++);
-	mov	dpl,r5
-	mov	dph,r6
-	mov	b,r7
-	lcall	__gptrget
-	mov	r4,a
-	inc	a
-	mov	dpl,r5
-	mov	dph,r6
-	mov	b,r7
-	lcall	__gptrput
-	mov	r7,#0x00
-	mov	dpl,r4
-	mov	dph,r7
-	lcall	_Display_printNumber
-;	App/test_display.c:32: lastMillis=0;
-	clr	a
-	mov	_lastMillis,a
-	mov	(_lastMillis + 1),a
-	mov	(_lastMillis + 2),a
-	mov	(_lastMillis + 3),a
-00103$:
-;	App/test_display.c:34: }
-	ret
-;------------------------------------------------------------
-;Allocation info for local variables in function 'testReadDeviceId'
-;------------------------------------------------------------
-;devId                     Allocated to registers r6 r7 
-;------------------------------------------------------------
-;	App/test_display.c:37: void testReadDeviceId() {
-;	-----------------------------------------
-;	 function testReadDeviceId
-;	-----------------------------------------
-_testReadDeviceId:
-;	App/test_display.c:40: printText("Device Id:");
-	mov	dptr,#___str_0
-	mov	b,#0x80
-	lcall	_printText
-;	App/test_display.c:41: uint16_t devId = readDeviceId();
-	lcall	_readDeviceId
-	mov	r6,dpl
-	mov	r7,dph
-;	App/test_display.c:42: printNumbers(devId, HEX);
-	mov	r5,#0x00
-	mov	r4,#0x00
-	mov	dptr,#_printNumbers_PARM_2
-	mov	a,#0x10
 	movx	@dptr,a
-	mov	dpl,r6
-	mov	dph,r7
-	mov	b,r5
-	mov	a,r4
-	lcall	_printNumbers
-;	App/test_display.c:43: printText("\nEnd\n");
-	mov	dptr,#___str_1
-	mov	b,#0x80
-;	App/test_display.c:44: }
-	ljmp	_printText
-;------------------------------------------------------------
-;Allocation info for local variables in function 'testReadBytes'
-;------------------------------------------------------------
-;j                         Allocated to registers r7 
-;z                         Allocated to registers r6 
-;------------------------------------------------------------
-;	App/test_display.c:47: void testReadBytes() {
-;	-----------------------------------------
-;	 function testReadBytes
-;	-----------------------------------------
-_testReadBytes:
-;	App/test_display.c:51: printText("Reading to array of bytes...");
-	mov	dptr,#___str_2
-	mov	b,#0x80
-	lcall	_printText
-;	App/test_display.c:53: for (uint8_t j=0; j<8; j++) {
-	mov	r7,#0x00
-00107$:
-	cjne	r7,#0x08,00129$
-00129$:
-	jc	00130$
-	ljmp	00102$
-00130$:
-;	App/test_display.c:55: printText("\nPage: ");    
-	mov	dptr,#___str_3
-	mov	b,#0x80
-	push	ar7
-	lcall	_printText
-	pop	ar7
-;	App/test_display.c:56: printNumbers(j, DEC);
-	mov	ar3,r7
-	mov	r4,#0x00
-	mov	r5,#0x00
-	mov	r6,#0x00
-	mov	dptr,#_printNumbers_PARM_2
-	mov	a,#0x0a
-	movx	@dptr,a
-	mov	dpl,r3
-	mov	dph,r4
-	mov	b,r5
-	mov	a,r6
-	push	ar7
-	lcall	_printNumbers
-;	App/test_display.c:57: printText("\n");
-	mov	dptr,#___str_4
-	mov	b,#0x80
-	lcall	_printText
-	pop	ar7
-;	App/test_display.c:59: readBytes((j*256), _sbuffer, 31);
-	mov	ar5,r7
-	mov	ar6,r5
-	mov	r5,#0x00
-	mov	a,r6
-	rlc	a
-	subb	a,acc
-	mov	r4,a
-	mov	r3,a
-	mov	_readBytes_PARM_2,#__sbuffer
-	mov	(_readBytes_PARM_2 + 1),#(__sbuffer >> 8)
-;	1-genFromRTrack replaced	mov	(_readBytes_PARM_2 + 2),#0x00
-	mov	(_readBytes_PARM_2 + 2),r5
-	mov	_readBytes_PARM_3,#0x1f
-;	1-genFromRTrack replaced	mov	(_readBytes_PARM_3 + 1),#0x00
-	mov	(_readBytes_PARM_3 + 1),r5
-	mov	dpl,r5
-	mov	dph,r6
-	mov	b,r4
-	mov	a,r3
-	push	ar7
-	lcall	_readBytes
-	pop	ar7
-;	App/test_display.c:61: for (uint8_t z=0; z<32; z++) {
-	mov	r6,#0x00
-00104$:
-	cjne	r6,#0x20,00131$
-00131$:
-	jnc	00108$
-;	App/test_display.c:62: printNumbers(_sbuffer[z], HEX);
-	mov	a,r6
-	add	a,#__sbuffer
-	mov	dpl,a
+	mov	dpl,#0x02
+	lcall	_p3Mode
+;	App/components/inputButton.c:12: p1Mode(1, INPUT);
+	mov	dptr,#_p1Mode_PARM_2
 	clr	a
-	addc	a,#(__sbuffer >> 8)
-	mov	dph,a
-	movx	a,@dptr
-	mov	r5,a
-	mov	r4,#0x00
-	mov	r3,#0x00
-	mov	r2,#0x00
-	mov	dptr,#_printNumbers_PARM_2
-	mov	a,#0x10
 	movx	@dptr,a
-	mov	dpl,r5
-	mov	dph,r4
-	mov	b,r3
-	mov	a,r2
-	push	ar7
-	push	ar6
-	lcall	_printNumbers
-;	App/test_display.c:63: printText(".");    
-	mov	dptr,#___str_5
-	mov	b,#0x80
-	lcall	_printText
-	pop	ar6
-	pop	ar7
-;	App/test_display.c:61: for (uint8_t z=0; z<32; z++) {
-	inc	r6
-	sjmp	00104$
-00108$:
-;	App/test_display.c:53: for (uint8_t j=0; j<8; j++) {
-	inc	r7
-	ljmp	00107$
-00102$:
-;	App/test_display.c:66: printText("\n");
-	mov	dptr,#___str_4
-	mov	b,#0x80
-;	App/test_display.c:67: }
-	ljmp	_printText
+	mov	dpl,#0x01
+;	App/components/inputButton.c:13: }
+	ljmp	_p1Mode
 ;------------------------------------------------------------
-;Allocation info for local variables in function 'main'
+;Allocation info for local variables in function 'Button_A_press'
 ;------------------------------------------------------------
-;m                         Allocated to registers 
-;btn1                      Allocated to registers 
-;btn2                      Allocated to registers 
-;------------------------------------------------------------
-;	App/test_display.c:75: void main()
+;	App/components/inputButton.c:15: bool Button_A_press() 
 ;	-----------------------------------------
-;	 function main
+;	 function Button_A_press
 ;	-----------------------------------------
-_main:
-;	App/test_display.c:77: CfgFsys(); 
-	lcall	_CfgFsys
-;	App/test_display.c:78: mDelaymS(10);
-	mov	dptr,#0x000a
-	lcall	_mDelaymS
-;	App/test_display.c:80: USBInit();
-	lcall	_USBInit
-;	App/test_display.c:81: USBSerial();
-	lcall	_USBSerial
-;	App/test_display.c:82: SPISetup();
-	lcall	_SPISetup
-;	App/test_display.c:84: Display_setup();
-	lcall	_Display_setup
-;	App/test_display.c:85: Button_setup();
-	lcall	_Button_setup
-;	App/test_display.c:88: mDelaymS(100);
-	mov	dptr,#0x0064
-	lcall	_mDelaymS
-;	App/test_display.c:94: while(1) {
-00113$:
-;	App/test_display.c:128: if (lastMillis - millis() >= 100) {
-	lcall	_millis
-	mov	r6,dpl
-	mov	r7,dph
-	clr	a
-	mov	r5,a
-	mov	r4,a
-	mov	a,_lastMillis
+_Button_A_press:
+;	App/components/inputButton.c:17: buttonAPressed = true;
+	mov	_buttonAPressed,#0x01
+;	App/components/inputButton.c:18: return (analogRead(BUTTON_A) > 80);
+	mov	dpl,#0x0b
+	lcall	_analogRead
+	mov	r7,dpl
 	clr	c
-	subb	a,r6
-	mov	r6,a
-	mov	a,(_lastMillis + 1)
+	mov	a,#0x50
 	subb	a,r7
-	mov	r7,a
-	mov	a,(_lastMillis + 2)
-	subb	a,r5
-	mov	r5,a
-	mov	a,(_lastMillis + 3)
-	subb	a,r4
-	mov	r4,a
+	clr	a
+	rlc	a
+	mov	dpl,a
+;	App/components/inputButton.c:19: }
+	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'Button_A_release'
+;------------------------------------------------------------
+;	App/components/inputButton.c:21: bool Button_A_release()
+;	-----------------------------------------
+;	 function Button_A_release
+;	-----------------------------------------
+_Button_A_release:
+;	App/components/inputButton.c:23: if (buttonAPressed && (analogRead(BUTTON_A) < 10)) 
+	mov	a,_buttonAPressed
+	jz	00102$
+	mov	dpl,#0x0b
+	lcall	_analogRead
+	mov	r7,dpl
+	cjne	r7,#0x0a,00115$
+00115$:
+	jnc	00102$
+;	App/components/inputButton.c:25: buttonAPressed = false;
+	mov	_buttonAPressed,#0x00
+;	App/components/inputButton.c:26: return true;
+	mov	dpl,#0x01
+	ret
+00102$:
+;	App/components/inputButton.c:28: return false;
+	mov	dpl,#0x00
+;	App/components/inputButton.c:29: }
+	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'Button_B_press'
+;------------------------------------------------------------
+;	App/components/inputButton.c:31: bool Button_B_press()
+;	-----------------------------------------
+;	 function Button_B_press
+;	-----------------------------------------
+_Button_B_press:
+;	App/components/inputButton.c:33: buttonBPressed = true;
+	mov	_buttonBPressed,#0x01
+;	App/components/inputButton.c:34: return (analogRead(BUTTON_B) > 80);
+	mov	dpl,#0x20
+	lcall	_analogRead
+	mov	r7,dpl
 	clr	c
-	mov	a,r6
-	subb	a,#0x64
-	mov	a,r7
-	subb	a,#0x00
-	mov	a,r5
-	subb	a,#0x00
-	mov	a,r4
-	subb	a,#0x00
-	jc	00111$
-;	App/test_display.c:129: Display_clear();
-	lcall	_Display_clear
-;	App/test_display.c:131: if (Button_C_press())
-	lcall	_Button_C_press
-	mov	a,dpl
-	jz	00108$
-;	App/test_display.c:132: Display_setDigit('3', 2);
-	mov	dptr,#_Display_setDigit_PARM_2
-	mov	a,#0x02
-	movx	@dptr,a
-	mov	dpl,#0x33
-	lcall	_Display_setDigit
-	sjmp	00109$
-00108$:
-;	App/test_display.c:133: else if (Button_A_press()) {
+	mov	a,#0x50
+	subb	a,r7
+	clr	a
+	rlc	a
+	mov	dpl,a
+;	App/components/inputButton.c:35: }
+	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'Button_B_release'
+;------------------------------------------------------------
+;	App/components/inputButton.c:36: bool Button_B_release()
+;	-----------------------------------------
+;	 function Button_B_release
+;	-----------------------------------------
+_Button_B_release:
+;	App/components/inputButton.c:38: if (buttonBPressed && (analogRead(BUTTON_B) < 10)) 
+	mov	a,_buttonBPressed
+	jz	00102$
+	mov	dpl,#0x20
+	lcall	_analogRead
+	mov	r7,dpl
+	cjne	r7,#0x0a,00115$
+00115$:
+	jnc	00102$
+;	App/components/inputButton.c:40: buttonBPressed = false;
+	mov	_buttonBPressed,#0x00
+;	App/components/inputButton.c:41: return true;
+	mov	dpl,#0x01
+	ret
+00102$:
+;	App/components/inputButton.c:43: return false;
+	mov	dpl,#0x00
+;	App/components/inputButton.c:44: }
+	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'Button_C_press'
+;------------------------------------------------------------
+;	App/components/inputButton.c:46: bool Button_C_press()
+;	-----------------------------------------
+;	 function Button_C_press
+;	-----------------------------------------
+_Button_C_press:
+;	App/components/inputButton.c:48: return Button_A_press() && Button_B_press();
 	lcall	_Button_A_press
 	mov	a,dpl
-	jz	00105$
-;	App/test_display.c:134: Display_setDigit('1', 2);
-	mov	dptr,#_Display_setDigit_PARM_2
-	mov	a,#0x02
-	movx	@dptr,a
-	mov	dpl,#0x31
-	lcall	_Display_setDigit
-;	App/test_display.c:135: testReadDeviceId();
-	lcall	_testReadDeviceId
-	sjmp	00109$
-00105$:
-;	App/test_display.c:136: } else if (Button_B_press()) {
+	jz	00103$
 	lcall	_Button_B_press
 	mov	a,dpl
-	jz	00102$
-;	App/test_display.c:137: Display_setDigit('2', 2);
-	mov	dptr,#_Display_setDigit_PARM_2
-	mov	a,#0x02
-	movx	@dptr,a
-	mov	dpl,#0x32
-	lcall	_Display_setDigit
-;	App/test_display.c:138: testReadBytes();
-	lcall	_testReadBytes
-	sjmp	00109$
-00102$:
-;	App/test_display.c:140: Display_setDigit('0', 2);
-	mov	dptr,#_Display_setDigit_PARM_2
-	mov	a,#0x02
-	movx	@dptr,a
-	mov	dpl,#0x30
-	lcall	_Display_setDigit
-00109$:
-;	App/test_display.c:142: lastMillis=0;
-	clr	a
-	mov	_lastMillis,a
-	mov	(_lastMillis + 1),a
-	mov	(_lastMillis + 2),a
-	mov	(_lastMillis + 3),a
-00111$:
-;	App/test_display.c:146: Display_update();
-	lcall	_Display_update
-;	App/test_display.c:148: lastMillis+=4;
-	mov	a,#0x04
-	add	a,_lastMillis
-	mov	_lastMillis,a
-	clr	a
-	addc	a,(_lastMillis + 1)
-	mov	(_lastMillis + 1),a
-	clr	a
-	addc	a,(_lastMillis + 2)
-	mov	(_lastMillis + 2),a
-	clr	a
-	addc	a,(_lastMillis + 3)
-	mov	(_lastMillis + 3),a
-;	App/test_display.c:151: }
-	ljmp	00113$
+	jnz	00104$
+00103$:
+	mov	r7,#0x00
+	sjmp	00105$
+00104$:
+	mov	r7,#0x01
+00105$:
+	mov	dpl,r7
+;	App/components/inputButton.c:49: }
+	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'Button_C_release'
+;------------------------------------------------------------
+;	App/components/inputButton.c:51: bool Button_C_release()
+;	-----------------------------------------
+;	 function Button_C_release
+;	-----------------------------------------
+_Button_C_release:
+;	App/components/inputButton.c:53: return Button_A_release() && Button_B_release();
+	lcall	_Button_A_release
+	mov	a,dpl
+	jz	00103$
+	lcall	_Button_B_release
+	mov	a,dpl
+	jnz	00104$
+00103$:
+	mov	r7,#0x00
+	sjmp	00105$
+00104$:
+	mov	r7,#0x01
+00105$:
+	mov	dpl,r7
+;	App/components/inputButton.c:54: }
+	ret
 	.area CSEG    (CODE)
 	.area CONST   (CODE)
-	.area CONST   (CODE)
-___str_0:
-	.ascii "Device Id:"
-	.db 0x00
-	.area CSEG    (CODE)
-	.area CONST   (CODE)
-___str_1:
-	.db 0x0a
-	.ascii "End"
-	.db 0x0a
-	.db 0x00
-	.area CSEG    (CODE)
-	.area CONST   (CODE)
-___str_2:
-	.ascii "Reading to array of bytes..."
-	.db 0x00
-	.area CSEG    (CODE)
-	.area CONST   (CODE)
-___str_3:
-	.db 0x0a
-	.ascii "Page: "
-	.db 0x00
-	.area CSEG    (CODE)
-	.area CONST   (CODE)
-___str_4:
-	.db 0x0a
-	.db 0x00
-	.area CSEG    (CODE)
-	.area CONST   (CODE)
-___str_5:
-	.ascii "."
-	.db 0x00
-	.area CSEG    (CODE)
 	.area XINIT   (CODE)
-__xinit__UNIQUEID:
-	.db #0x00	; 0
-	.db 0x00
-	.db 0x00
-	.db 0x00
-	.db 0x00
-	.db 0x00
-	.db 0x00
-	.db 0x00
 	.area CABS    (ABS,CODE)

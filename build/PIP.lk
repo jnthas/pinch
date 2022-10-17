@@ -23,6 +23,8 @@ build/USBhandler.rel
 build/Print.rel
 build/GPIO.rel
 build/w25qxx.rel
+build/sevenSegmentDisplay.rel
+build/inputButton.rel
 build/debug.rel
 build/spi.rel
 
