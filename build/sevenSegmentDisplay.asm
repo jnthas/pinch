@@ -250,6 +250,7 @@
 	.globl _Display_marquee_PARM_2
 	.globl _Display_setDigit_PARM_2
 	.globl _Display_marquee_PARM_3
+	.globl _ledState
 	.globl _Display_setup
 	.globl _Display_setDigit
 	.globl _Display_toggleOff
@@ -261,6 +262,7 @@
 	.globl _Display_printNumber
 	.globl _Display_marquee
 	.globl _Display_loading
+	.globl _Display_toggleLed
 ;--------------------------------------------------------
 ; special function registers
 ;--------------------------------------------------------
@@ -512,15 +514,18 @@ _UIF_BUS_RST	=	0x00d8
 ; internal ram data
 ;--------------------------------------------------------
 	.area DSEG    (DATA)
-_Display_printNumber_numchar_65536_122:
+_ledState::
+	.ds 1
+_Display_printNumber_numchar_65536_123:
 	.ds 3
 _Display_marquee_PARM_3:
 	.ds 3
-_Display_marquee_text_65536_127:
+_Display_marquee_text_65536_128:
 	.ds 3
 ;--------------------------------------------------------
 ; overlayable items in internal ram 
 ;--------------------------------------------------------
+	.area	OSEG    (OVR,DATA)
 	.area	OSEG    (OVR,DATA)
 ;--------------------------------------------------------
 ; indirectly addressable internal ram data
@@ -545,9 +550,9 @@ _Display_marquee_text_65536_127:
 	.area XSEG    (XDATA)
 _Display_setDigit_PARM_2:
 	.ds 1
-_Display_setDigit_digit_65536_107:
+_Display_setDigit_digit_65536_108:
 	.ds 1
-_Display_toggleOn_pin_65536_112:
+_Display_toggleOn_pin_65536_113:
 	.ds 1
 _Display_marquee_PARM_2:
 	.ds 1
@@ -580,6 +585,8 @@ _DisplayChars::
 	.area GSINIT  (CODE)
 	.area GSFINAL (CODE)
 	.area GSINIT  (CODE)
+;	App/components/sevenSegmentDisplay.c:43: bool ledState = false;
+	mov	_ledState,#0x00
 ;--------------------------------------------------------
 ; Home
 ;--------------------------------------------------------
@@ -592,7 +599,7 @@ _DisplayChars::
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_setup'
 ;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:44: void Display_setup() 
+;	App/components/sevenSegmentDisplay.c:45: void Display_setup() 
 ;	-----------------------------------------
 ;	 function Display_setup
 ;	-----------------------------------------
@@ -605,47 +612,47 @@ _Display_setup:
 	ar2 = 0x02
 	ar1 = 0x01
 	ar0 = 0x00
+;	App/components/sevenSegmentDisplay.c:47: p3Mode(0, OUTPUT);
+	mov	dptr,#_p3Mode_PARM_2
+	mov	a,#0x01
+	movx	@dptr,a
+	mov	dpl,#0x00
+	lcall	_p3Mode
 ;	App/components/sevenSegmentDisplay.c:48: p3Mode(1, OUTPUT);
 	mov	dptr,#_p3Mode_PARM_2
 	mov	a,#0x01
 	movx	@dptr,a
 	mov	dpl,#0x01
 	lcall	_p3Mode
-;	App/components/sevenSegmentDisplay.c:49: p3Mode(0, OUTPUT);
+;	App/components/sevenSegmentDisplay.c:49: p3Mode(3, OUTPUT);
 	mov	dptr,#_p3Mode_PARM_2
 	mov	a,#0x01
 	movx	@dptr,a
-	mov	dpl,#0x00
+	mov	dpl,#0x03
 	lcall	_p3Mode
 ;	App/components/sevenSegmentDisplay.c:50: p3Mode(4, OUTPUT);
 	mov	dptr,#_p3Mode_PARM_2
 	mov	a,#0x01
 	movx	@dptr,a
 	mov	dpl,#0x04
-	lcall	_p3Mode
-;	App/components/sevenSegmentDisplay.c:51: p3Mode(3, OUTPUT);
-	mov	dptr,#_p3Mode_PARM_2
-	mov	a,#0x01
-	movx	@dptr,a
-	mov	dpl,#0x03
-;	App/components/sevenSegmentDisplay.c:55: }
+;	App/components/sevenSegmentDisplay.c:51: }
 	ljmp	_p3Mode
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_setDigit'
 ;------------------------------------------------------------
 ;pos                       Allocated with name '_Display_setDigit_PARM_2'
-;digit                     Allocated with name '_Display_setDigit_digit_65536_107'
+;digit                     Allocated with name '_Display_setDigit_digit_65536_108'
 ;b                         Allocated to registers r4 
 ;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:59: void Display_setDigit(__xdata char digit, __xdata uint8_t pos) {
+;	App/components/sevenSegmentDisplay.c:54: void Display_setDigit(__xdata char digit, __xdata uint8_t pos) {
 ;	-----------------------------------------
 ;	 function Display_setDigit
 ;	-----------------------------------------
 _Display_setDigit:
 	mov	a,dpl
-	mov	dptr,#_Display_setDigit_digit_65536_107
+	mov	dptr,#_Display_setDigit_digit_65536_108
 	movx	@dptr,a
-;	App/components/sevenSegmentDisplay.c:61: display_buffer[pos] = DisplayChars[0][0];
+;	App/components/sevenSegmentDisplay.c:56: display_buffer[pos] = DisplayChars[0][0];
 	mov	dptr,#_Display_setDigit_PARM_2
 	movx	a,@dptr
 	add	a,#_display_buffer
@@ -658,8 +665,8 @@ _Display_setDigit:
 	mov	dpl,r6
 	mov	dph,r7
 	movx	@dptr,a
-;	App/components/sevenSegmentDisplay.c:63: for (uint8_t b = 0; b<CHAR_ARR_SIZE; b++) 
-	mov	dptr,#_Display_setDigit_digit_65536_107
+;	App/components/sevenSegmentDisplay.c:58: for (uint8_t b = 0; b<CHAR_ARR_SIZE; b++) 
+	mov	dptr,#_Display_setDigit_digit_65536_108
 	movx	a,@dptr
 	mov	r5,a
 	mov	r4,#0x00
@@ -667,7 +674,7 @@ _Display_setDigit:
 	cjne	r4,#0x19,00122$
 00122$:
 	jnc	00107$
-;	App/components/sevenSegmentDisplay.c:65: if (DisplayChars[b][1] == digit)
+;	App/components/sevenSegmentDisplay.c:60: if (DisplayChars[b][1] == digit)
 	mov	a,r4
 	mov	b,#0x02
 	mul	ab
@@ -684,7 +691,7 @@ _Display_setDigit:
 	movx	a,@dptr
 	mov	r1,a
 	cjne	a,ar5,00106$
-;	App/components/sevenSegmentDisplay.c:66: display_buffer[pos] = DisplayChars[b][0];
+;	App/components/sevenSegmentDisplay.c:61: display_buffer[pos] = DisplayChars[b][0];
 	mov	a,r2
 	add	a,#_DisplayChars
 	mov	dpl,a
@@ -697,65 +704,87 @@ _Display_setDigit:
 	mov	dph,r7
 	movx	@dptr,a
 00106$:
-;	App/components/sevenSegmentDisplay.c:63: for (uint8_t b = 0; b<CHAR_ARR_SIZE; b++) 
+;	App/components/sevenSegmentDisplay.c:58: for (uint8_t b = 0; b<CHAR_ARR_SIZE; b++) 
 	inc	r4
 	sjmp	00105$
 00107$:
-;	App/components/sevenSegmentDisplay.c:68: }
+;	App/components/sevenSegmentDisplay.c:63: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_toggleOff'
 ;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:70: void Display_toggleOff() {
+;	App/components/sevenSegmentDisplay.c:65: void Display_toggleOff() {
 ;	-----------------------------------------
 ;	 function Display_toggleOff
 ;	-----------------------------------------
 _Display_toggleOff:
-;	App/components/sevenSegmentDisplay.c:71: digitalWrite(DIGIT_1_PIN, HIGH);
+;	App/components/sevenSegmentDisplay.c:66: digitalWrite(DIGIT_1_PIN, HIGH);
 	mov	dptr,#_digitalWrite_PARM_2
 	mov	a,#0x01
 	movx	@dptr,a
 	mov	dpl,#0x1f
 	lcall	_digitalWrite
-;	App/components/sevenSegmentDisplay.c:72: digitalWrite(DIGIT_2_PIN, HIGH);
+;	App/components/sevenSegmentDisplay.c:67: digitalWrite(DIGIT_2_PIN, HIGH);
 	mov	dptr,#_digitalWrite_PARM_2
 	mov	a,#0x01
 	movx	@dptr,a
 	mov	dpl,#0x1e
 	lcall	_digitalWrite
-;	App/components/sevenSegmentDisplay.c:73: digitalWrite(DIGIT_3_PIN, HIGH);
+;	App/components/sevenSegmentDisplay.c:68: digitalWrite(DIGIT_3_PIN, HIGH);
 	mov	dptr,#_digitalWrite_PARM_2
 	mov	a,#0x01
 	movx	@dptr,a
 	mov	dpl,#0x22
-;	App/components/sevenSegmentDisplay.c:74: }
+;	App/components/sevenSegmentDisplay.c:69: }
 	ljmp	_digitalWrite
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_toggleOn'
 ;------------------------------------------------------------
-;pin                       Allocated with name '_Display_toggleOn_pin_65536_112'
+;pin                       Allocated with name '_Display_toggleOn_pin_65536_113'
 ;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:76: void Display_toggleOn(__xdata uint8_t pin) {
+;	App/components/sevenSegmentDisplay.c:71: void Display_toggleOn(__xdata uint8_t pin) {
 ;	-----------------------------------------
 ;	 function Display_toggleOn
 ;	-----------------------------------------
 _Display_toggleOn:
 	mov	a,dpl
-	mov	dptr,#_Display_toggleOn_pin_65536_112
+	mov	dptr,#_Display_toggleOn_pin_65536_113
 	movx	@dptr,a
-;	App/components/sevenSegmentDisplay.c:78: if (pin == DIGIT_2_PIN) {
+;	App/components/sevenSegmentDisplay.c:73: if (pin == DIGIT_2_PIN) {
 	movx	a,@dptr
 	mov	r7,a
 	cjne	r7,#0x1e,00104$
-;	App/components/sevenSegmentDisplay.c:79: digitalWrite(DIGIT_1_PIN, HIGH);
+;	App/components/sevenSegmentDisplay.c:74: digitalWrite(DIGIT_1_PIN, HIGH);
 	mov	dptr,#_digitalWrite_PARM_2
 	mov	a,#0x01
 	movx	@dptr,a
 	mov	dpl,#0x1f
 	lcall	_digitalWrite
-;	App/components/sevenSegmentDisplay.c:80: digitalWrite(DIGIT_2_PIN, LOW);
+;	App/components/sevenSegmentDisplay.c:75: digitalWrite(DIGIT_2_PIN, LOW);
 	mov	dptr,#_digitalWrite_PARM_2
 	clr	a
+	movx	@dptr,a
+	mov	dpl,#0x1e
+	lcall	_digitalWrite
+;	App/components/sevenSegmentDisplay.c:76: digitalWrite(DIGIT_3_PIN, HIGH);
+	mov	dptr,#_digitalWrite_PARM_2
+	mov	a,#0x01
+	movx	@dptr,a
+	mov	dpl,#0x22
+	lcall	_digitalWrite
+	sjmp	00105$
+00104$:
+;	App/components/sevenSegmentDisplay.c:78: } else if (pin == DIGIT_1_PIN) {
+	cjne	r7,#0x1f,00105$
+;	App/components/sevenSegmentDisplay.c:79: digitalWrite(DIGIT_1_PIN, LOW);
+	mov	dptr,#_digitalWrite_PARM_2
+	clr	a
+	movx	@dptr,a
+	mov	dpl,#0x1f
+	lcall	_digitalWrite
+;	App/components/sevenSegmentDisplay.c:80: digitalWrite(DIGIT_2_PIN, HIGH);
+	mov	dptr,#_digitalWrite_PARM_2
+	mov	a,#0x01
 	movx	@dptr,a
 	mov	dpl,#0x1e
 	lcall	_digitalWrite
@@ -765,13 +794,15 @@ _Display_toggleOn:
 	movx	@dptr,a
 	mov	dpl,#0x22
 	lcall	_digitalWrite
-	sjmp	00105$
-00104$:
-;	App/components/sevenSegmentDisplay.c:83: } else if (pin == DIGIT_1_PIN) {
-	cjne	r7,#0x1f,00105$
-;	App/components/sevenSegmentDisplay.c:84: digitalWrite(DIGIT_1_PIN, LOW);
+00105$:
+;	App/components/sevenSegmentDisplay.c:83: } if (pin == DIGIT_3_PIN) {
+	mov	dptr,#_Display_toggleOn_pin_65536_113
+	movx	a,@dptr
+	mov	r7,a
+	cjne	r7,#0x22,00107$
+;	App/components/sevenSegmentDisplay.c:84: digitalWrite(DIGIT_1_PIN, HIGH);
 	mov	dptr,#_digitalWrite_PARM_2
-	clr	a
+	mov	a,#0x01
 	movx	@dptr,a
 	mov	dpl,#0x1f
 	lcall	_digitalWrite
@@ -781,156 +812,145 @@ _Display_toggleOn:
 	movx	@dptr,a
 	mov	dpl,#0x1e
 	lcall	_digitalWrite
-;	App/components/sevenSegmentDisplay.c:86: digitalWrite(DIGIT_3_PIN, HIGH);
-	mov	dptr,#_digitalWrite_PARM_2
-	mov	a,#0x01
-	movx	@dptr,a
-	mov	dpl,#0x22
-	lcall	_digitalWrite
-00105$:
-;	App/components/sevenSegmentDisplay.c:88: } if (pin == DIGIT_3_PIN) {
-	mov	dptr,#_Display_toggleOn_pin_65536_112
-	movx	a,@dptr
-	mov	r7,a
-	cjne	r7,#0x22,00107$
-;	App/components/sevenSegmentDisplay.c:89: digitalWrite(DIGIT_1_PIN, HIGH);
-	mov	dptr,#_digitalWrite_PARM_2
-	mov	a,#0x01
-	movx	@dptr,a
-	mov	dpl,#0x1f
-	lcall	_digitalWrite
-;	App/components/sevenSegmentDisplay.c:90: digitalWrite(DIGIT_2_PIN, HIGH);
-	mov	dptr,#_digitalWrite_PARM_2
-	mov	a,#0x01
-	movx	@dptr,a
-	mov	dpl,#0x1e
-	lcall	_digitalWrite
-;	App/components/sevenSegmentDisplay.c:91: digitalWrite(DIGIT_3_PIN, LOW);
+;	App/components/sevenSegmentDisplay.c:86: digitalWrite(DIGIT_3_PIN, LOW);
 	mov	dptr,#_digitalWrite_PARM_2
 	clr	a
 	movx	@dptr,a
 	mov	dpl,#0x22
 	lcall	_digitalWrite
 00107$:
-;	App/components/sevenSegmentDisplay.c:94: mDelaymS(1);
+;	App/components/sevenSegmentDisplay.c:89: mDelaymS(1);
 	mov	dptr,#0x0001
-;	App/components/sevenSegmentDisplay.c:95: }
+;	App/components/sevenSegmentDisplay.c:90: }
 	ljmp	_mDelaymS
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_select'
 ;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:97: void Display_select()
+;	App/components/sevenSegmentDisplay.c:92: void Display_select()
 ;	-----------------------------------------
 ;	 function Display_select
 ;	-----------------------------------------
 _Display_select:
-;	App/components/sevenSegmentDisplay.c:99: digitalWrite(DISPLAY_CS, LOW);
+;	App/components/sevenSegmentDisplay.c:94: digitalWrite(DISPLAY_CS, LOW);
 	mov	dptr,#_digitalWrite_PARM_2
 	clr	a
+	movx	@dptr,a
+	mov	dpl,#0x21
+;	App/components/sevenSegmentDisplay.c:95: }
+	ljmp	_digitalWrite
+;------------------------------------------------------------
+;Allocation info for local variables in function 'Display_unselect'
+;------------------------------------------------------------
+;	App/components/sevenSegmentDisplay.c:97: void Display_unselect()
+;	-----------------------------------------
+;	 function Display_unselect
+;	-----------------------------------------
+_Display_unselect:
+;	App/components/sevenSegmentDisplay.c:99: digitalWrite(DISPLAY_CS, HIGH);
+	mov	dptr,#_digitalWrite_PARM_2
+	mov	a,#0x01
 	movx	@dptr,a
 	mov	dpl,#0x21
 ;	App/components/sevenSegmentDisplay.c:100: }
 	ljmp	_digitalWrite
 ;------------------------------------------------------------
-;Allocation info for local variables in function 'Display_unselect'
-;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:102: void Display_unselect()
-;	-----------------------------------------
-;	 function Display_unselect
-;	-----------------------------------------
-_Display_unselect:
-;	App/components/sevenSegmentDisplay.c:104: digitalWrite(DISPLAY_CS, HIGH);
-	mov	dptr,#_digitalWrite_PARM_2
-	mov	a,#0x01
-	movx	@dptr,a
-	mov	dpl,#0x21
-;	App/components/sevenSegmentDisplay.c:105: }
-	ljmp	_digitalWrite
-;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_update'
 ;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:107: void Display_update() {
+;	App/components/sevenSegmentDisplay.c:102: void Display_update() {
 ;	-----------------------------------------
 ;	 function Display_update
 ;	-----------------------------------------
 _Display_update:
-;	App/components/sevenSegmentDisplay.c:109: Display_toggleOff();    
+;	App/components/sevenSegmentDisplay.c:104: Display_toggleOff();    
 	lcall	_Display_toggleOff
-;	App/components/sevenSegmentDisplay.c:110: Display_select();
+;	App/components/sevenSegmentDisplay.c:105: Display_select();
 	lcall	_Display_select
-;	App/components/sevenSegmentDisplay.c:111: CH554SPIMasterWrite(display_buffer[0]);
+;	App/components/sevenSegmentDisplay.c:106: CH554SPIMasterWrite(display_buffer[0]);
 	mov	dptr,#_display_buffer
 	movx	a,@dptr
 	mov	dpl,a
 	lcall	_CH554SPIMasterWrite
-;	App/components/sevenSegmentDisplay.c:112: Display_unselect();    
+;	App/components/sevenSegmentDisplay.c:107: Display_unselect();    
 	lcall	_Display_unselect
-;	App/components/sevenSegmentDisplay.c:113: Display_toggleOn(DIGIT_1_PIN);
+;	App/components/sevenSegmentDisplay.c:108: Display_toggleOn(DIGIT_1_PIN);
 	mov	dpl,#0x1f
 	lcall	_Display_toggleOn
-;	App/components/sevenSegmentDisplay.c:115: Display_toggleOff();    
+;	App/components/sevenSegmentDisplay.c:110: Display_toggleOff();    
 	lcall	_Display_toggleOff
-;	App/components/sevenSegmentDisplay.c:116: Display_select();
+;	App/components/sevenSegmentDisplay.c:111: Display_select();
 	lcall	_Display_select
-;	App/components/sevenSegmentDisplay.c:117: CH554SPIMasterWrite(display_buffer[1]);
+;	App/components/sevenSegmentDisplay.c:112: CH554SPIMasterWrite(display_buffer[1]);
 	mov	dptr,#(_display_buffer + 0x0001)
 	movx	a,@dptr
 	mov	dpl,a
 	lcall	_CH554SPIMasterWrite
-;	App/components/sevenSegmentDisplay.c:118: Display_unselect();
+;	App/components/sevenSegmentDisplay.c:113: Display_unselect();
 	lcall	_Display_unselect
-;	App/components/sevenSegmentDisplay.c:119: Display_toggleOn(DIGIT_2_PIN);
+;	App/components/sevenSegmentDisplay.c:114: Display_toggleOn(DIGIT_2_PIN);
 	mov	dpl,#0x1e
 	lcall	_Display_toggleOn
-;	App/components/sevenSegmentDisplay.c:121: Display_toggleOff();    
+;	App/components/sevenSegmentDisplay.c:116: Display_toggleOff();
 	lcall	_Display_toggleOff
-;	App/components/sevenSegmentDisplay.c:122: Display_select();
+;	App/components/sevenSegmentDisplay.c:118: display_buffer[2] |= ledState << 7;
+	mov	dptr,#(_display_buffer + 0x0002)
+	movx	a,@dptr
+	mov	r7,a
+	mov	a,_ledState
+	rr	a
+	anl	a,#0x80
+	mov	r6,a
+	mov	a,r7
+	orl	ar6,a
+	mov	dptr,#(_display_buffer + 0x0002)
+	mov	a,r6
+	movx	@dptr,a
+;	App/components/sevenSegmentDisplay.c:119: Display_select();
 	lcall	_Display_select
-;	App/components/sevenSegmentDisplay.c:123: CH554SPIMasterWrite(display_buffer[2]);
+;	App/components/sevenSegmentDisplay.c:120: CH554SPIMasterWrite(display_buffer[2]);
 	mov	dptr,#(_display_buffer + 0x0002)
 	movx	a,@dptr
 	mov	dpl,a
 	lcall	_CH554SPIMasterWrite
-;	App/components/sevenSegmentDisplay.c:124: Display_unselect();
+;	App/components/sevenSegmentDisplay.c:121: Display_unselect();
 	lcall	_Display_unselect
-;	App/components/sevenSegmentDisplay.c:125: Display_toggleOn(DIGIT_3_PIN);   
+;	App/components/sevenSegmentDisplay.c:124: Display_toggleOn(DIGIT_3_PIN);
 	mov	dpl,#0x22
-;	App/components/sevenSegmentDisplay.c:127: }
+;	App/components/sevenSegmentDisplay.c:128: }
 	ljmp	_Display_toggleOn
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_clear'
 ;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:129: void Display_clear() {
+;	App/components/sevenSegmentDisplay.c:130: void Display_clear() {
 ;	-----------------------------------------
 ;	 function Display_clear
 ;	-----------------------------------------
 _Display_clear:
-;	App/components/sevenSegmentDisplay.c:130: display_buffer[0] = 0;
+;	App/components/sevenSegmentDisplay.c:131: display_buffer[0] = 0;
 	mov	dptr,#_display_buffer
 	clr	a
 	movx	@dptr,a
-;	App/components/sevenSegmentDisplay.c:131: display_buffer[1] = 0;
+;	App/components/sevenSegmentDisplay.c:132: display_buffer[1] = 0;
 	mov	dptr,#(_display_buffer + 0x0001)
 	movx	@dptr,a
-;	App/components/sevenSegmentDisplay.c:132: display_buffer[2] = 0;
+;	App/components/sevenSegmentDisplay.c:133: display_buffer[2] = 0;
 	mov	dptr,#(_display_buffer + 0x0002)
 	movx	@dptr,a
-;	App/components/sevenSegmentDisplay.c:133: }
+;	App/components/sevenSegmentDisplay.c:134: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_printNumber'
 ;------------------------------------------------------------
 ;number                    Allocated to registers r6 r7 
-;numchar                   Allocated with name '_Display_printNumber_numchar_65536_122'
+;numchar                   Allocated with name '_Display_printNumber_numchar_65536_123'
 ;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:135: void Display_printNumber(int number) {
+;	App/components/sevenSegmentDisplay.c:136: void Display_printNumber(int number) {
 ;	-----------------------------------------
 ;	 function Display_printNumber
 ;	-----------------------------------------
 _Display_printNumber:
 	mov	r6,dpl
 	mov	r7,dph
-;	App/components/sevenSegmentDisplay.c:138: sprintf(numchar, "%d", number);
+;	App/components/sevenSegmentDisplay.c:139: sprintf(numchar, "%d", number);
 	push	ar7
 	push	ar6
 	push	ar6
@@ -941,9 +961,9 @@ _Display_printNumber:
 	push	acc
 	mov	a,#0x80
 	push	acc
-	mov	a,#_Display_printNumber_numchar_65536_122
+	mov	a,#_Display_printNumber_numchar_65536_123
 	push	acc
-	mov	a,#(_Display_printNumber_numchar_65536_122 >> 8)
+	mov	a,#(_Display_printNumber_numchar_65536_123 >> 8)
 	push	acc
 	mov	a,#0x40
 	push	acc
@@ -953,7 +973,7 @@ _Display_printNumber:
 	mov	sp,a
 	pop	ar6
 	pop	ar7
-;	App/components/sevenSegmentDisplay.c:140: if (number < 10) {
+;	App/components/sevenSegmentDisplay.c:141: if (number < 10) {
 	clr	c
 	mov	a,r6
 	subb	a,#0x0a
@@ -961,7 +981,7 @@ _Display_printNumber:
 	xrl	a,#0x80
 	subb	a,#0x80
 	jnc	00108$
-;	App/components/sevenSegmentDisplay.c:141: Display_setDigit(number, 2);
+;	App/components/sevenSegmentDisplay.c:142: Display_setDigit(number, 2);
 	mov	ar5,r6
 	mov	dptr,#_Display_setDigit_PARM_2
 	mov	a,#0x02
@@ -969,7 +989,7 @@ _Display_printNumber:
 	mov	dpl,r5
 	ljmp	_Display_setDigit
 00108$:
-;	App/components/sevenSegmentDisplay.c:142: } else if (number < 100) {
+;	App/components/sevenSegmentDisplay.c:143: } else if (number < 100) {
 	clr	c
 	mov	a,r6
 	subb	a,#0x64
@@ -977,20 +997,20 @@ _Display_printNumber:
 	xrl	a,#0x80
 	subb	a,#0x80
 	jnc	00105$
-;	App/components/sevenSegmentDisplay.c:143: Display_setDigit(numchar[1], 2);
+;	App/components/sevenSegmentDisplay.c:144: Display_setDigit(numchar[1], 2);
 	mov	dptr,#_Display_setDigit_PARM_2
 	mov	a,#0x02
 	movx	@dptr,a
-	mov	dpl,(_Display_printNumber_numchar_65536_122 + 0x0001)
+	mov	dpl,(_Display_printNumber_numchar_65536_123 + 0x0001)
 	lcall	_Display_setDigit
-;	App/components/sevenSegmentDisplay.c:144: Display_setDigit(numchar[0], 1);
+;	App/components/sevenSegmentDisplay.c:145: Display_setDigit(numchar[0], 1);
 	mov	dptr,#_Display_setDigit_PARM_2
 	mov	a,#0x01
 	movx	@dptr,a
-	mov	dpl,_Display_printNumber_numchar_65536_122
+	mov	dpl,_Display_printNumber_numchar_65536_123
 	ljmp	_Display_setDigit
 00105$:
-;	App/components/sevenSegmentDisplay.c:145: } else if (number < 1000) {
+;	App/components/sevenSegmentDisplay.c:146: } else if (number < 1000) {
 	clr	c
 	mov	a,r6
 	subb	a,#0xe8
@@ -998,44 +1018,44 @@ _Display_printNumber:
 	xrl	a,#0x80
 	subb	a,#0x83
 	jnc	00102$
-;	App/components/sevenSegmentDisplay.c:146: Display_setDigit(numchar[2], 2);
+;	App/components/sevenSegmentDisplay.c:147: Display_setDigit(numchar[2], 2);
 	mov	dptr,#_Display_setDigit_PARM_2
 	mov	a,#0x02
 	movx	@dptr,a
-	mov	dpl,(_Display_printNumber_numchar_65536_122 + 0x0002)
+	mov	dpl,(_Display_printNumber_numchar_65536_123 + 0x0002)
 	lcall	_Display_setDigit
-;	App/components/sevenSegmentDisplay.c:147: Display_setDigit(numchar[1], 1);
+;	App/components/sevenSegmentDisplay.c:148: Display_setDigit(numchar[1], 1);
 	mov	dptr,#_Display_setDigit_PARM_2
 	mov	a,#0x01
 	movx	@dptr,a
-	mov	dpl,(_Display_printNumber_numchar_65536_122 + 0x0001)
+	mov	dpl,(_Display_printNumber_numchar_65536_123 + 0x0001)
 	lcall	_Display_setDigit
-;	App/components/sevenSegmentDisplay.c:148: Display_setDigit(numchar[0], 0);
+;	App/components/sevenSegmentDisplay.c:149: Display_setDigit(numchar[0], 0);
 	mov	dptr,#_Display_setDigit_PARM_2
 	clr	a
 	movx	@dptr,a
-	mov	dpl,_Display_printNumber_numchar_65536_122
+	mov	dpl,_Display_printNumber_numchar_65536_123
 	ljmp	_Display_setDigit
 00102$:
-;	App/components/sevenSegmentDisplay.c:150: Display_clear();
-;	App/components/sevenSegmentDisplay.c:152: }
+;	App/components/sevenSegmentDisplay.c:151: Display_clear();
+;	App/components/sevenSegmentDisplay.c:153: }
 	ljmp	_Display_clear
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_marquee'
 ;------------------------------------------------------------
 ;currentPos                Allocated with name '_Display_marquee_PARM_3'
-;text                      Allocated with name '_Display_marquee_text_65536_127'
+;text                      Allocated with name '_Display_marquee_text_65536_128'
 ;size                      Allocated with name '_Display_marquee_PARM_2'
 ;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:155: void Display_marquee(const char* text, __xdata uint8_t size, uint8_t* currentPos)
+;	App/components/sevenSegmentDisplay.c:156: void Display_marquee(const char* text, __xdata uint8_t size, uint8_t* currentPos)
 ;	-----------------------------------------
 ;	 function Display_marquee
 ;	-----------------------------------------
 _Display_marquee:
-	mov	_Display_marquee_text_65536_127,dpl
-	mov	(_Display_marquee_text_65536_127 + 1),dph
-	mov	(_Display_marquee_text_65536_127 + 2),b
-;	App/components/sevenSegmentDisplay.c:157: if ((*currentPos) >= size)
+	mov	_Display_marquee_text_65536_128,dpl
+	mov	(_Display_marquee_text_65536_128 + 1),dph
+	mov	(_Display_marquee_text_65536_128 + 2),b
+;	App/components/sevenSegmentDisplay.c:158: if ((*currentPos) >= size)
 	mov	r2,_Display_marquee_PARM_3
 	mov	r3,(_Display_marquee_PARM_3 + 1)
 	mov	r4,(_Display_marquee_PARM_3 + 2)
@@ -1051,24 +1071,24 @@ _Display_marquee:
 	mov	a,r1
 	subb	a,r0
 	jc	00102$
-;	App/components/sevenSegmentDisplay.c:158: (*currentPos) = 0;
+;	App/components/sevenSegmentDisplay.c:159: (*currentPos) = 0;
 	mov	dpl,r2
 	mov	dph,r3
 	mov	b,r4
 	clr	a
 	lcall	__gptrput
 00102$:
-;	App/components/sevenSegmentDisplay.c:160: Display_setDigit(text[(*currentPos)], 0);
+;	App/components/sevenSegmentDisplay.c:161: Display_setDigit(text[(*currentPos)], 0);
 	mov	dpl,r2
 	mov	dph,r3
 	mov	b,r4
 	lcall	__gptrget
-	add	a,_Display_marquee_text_65536_127
+	add	a,_Display_marquee_text_65536_128
 	mov	r1,a
 	clr	a
-	addc	a,(_Display_marquee_text_65536_127 + 1)
+	addc	a,(_Display_marquee_text_65536_128 + 1)
 	mov	r6,a
-	mov	r7,(_Display_marquee_text_65536_127 + 2)
+	mov	r7,(_Display_marquee_text_65536_128 + 2)
 	mov	dpl,r1
 	mov	dph,r6
 	mov	b,r7
@@ -1087,7 +1107,7 @@ _Display_marquee:
 	pop	ar2
 	pop	ar3
 	pop	ar4
-;	App/components/sevenSegmentDisplay.c:161: Display_setDigit(((*currentPos)+1) < size ? text[(*currentPos)+1] : ' ', 1);
+;	App/components/sevenSegmentDisplay.c:162: Display_setDigit(((*currentPos)+1) < size ? text[(*currentPos)+1] : ' ', 1);
 	mov	dpl,r2
 	mov	dph,r3
 	mov	b,r4
@@ -1119,12 +1139,12 @@ _Display_marquee:
 	inc	r6
 00124$:
 	mov	a,r7
-	add	a,_Display_marquee_text_65536_127
+	add	a,_Display_marquee_text_65536_128
 	mov	r1,a
 	mov	a,r6
-	addc	a,(_Display_marquee_text_65536_127 + 1)
+	addc	a,(_Display_marquee_text_65536_128 + 1)
 	mov	r6,a
-	mov	r7,(_Display_marquee_text_65536_127 + 2)
+	mov	r7,(_Display_marquee_text_65536_128 + 2)
 	mov	dpl,r1
 	mov	dph,r6
 	mov	b,r7
@@ -1151,7 +1171,7 @@ _Display_marquee:
 	pop	ar3
 	pop	ar4
 	pop	ar5
-;	App/components/sevenSegmentDisplay.c:162: Display_setDigit(((*currentPos)+2) < size ? text[(*currentPos)+2] : ' ', 2);
+;	App/components/sevenSegmentDisplay.c:163: Display_setDigit(((*currentPos)+2) < size ? text[(*currentPos)+2] : ' ', 2);
 	mov	dpl,r2
 	mov	dph,r3
 	mov	b,r4
@@ -1186,12 +1206,12 @@ _Display_marquee:
 	addc	a,r6
 	mov	r6,a
 	mov	a,r7
-	add	a,_Display_marquee_text_65536_127
+	add	a,_Display_marquee_text_65536_128
 	mov	r7,a
 	mov	a,r6
-	addc	a,(_Display_marquee_text_65536_127 + 1)
+	addc	a,(_Display_marquee_text_65536_128 + 1)
 	mov	r6,a
-	mov	r5,(_Display_marquee_text_65536_127 + 2)
+	mov	r5,(_Display_marquee_text_65536_128 + 2)
 	mov	dpl,r7
 	mov	dph,r6
 	mov	b,r5
@@ -1214,7 +1234,7 @@ _Display_marquee:
 	pop	ar2
 	pop	ar3
 	pop	ar4
-;	App/components/sevenSegmentDisplay.c:164: (*currentPos)++;
+;	App/components/sevenSegmentDisplay.c:165: (*currentPos)++;
 	mov	dpl,r2
 	mov	dph,r3
 	mov	b,r4
@@ -1225,14 +1245,14 @@ _Display_marquee:
 	mov	dph,r3
 	mov	b,r4
 	mov	a,r7
-;	App/components/sevenSegmentDisplay.c:166: }
+;	App/components/sevenSegmentDisplay.c:167: }
 	ljmp	__gptrput
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_loading'
 ;------------------------------------------------------------
 ;currentPos                Allocated to registers r5 r6 r7 
 ;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:168: void Display_loading(uint8_t* currentPos) {
+;	App/components/sevenSegmentDisplay.c:169: void Display_loading(uint8_t* currentPos) {
 ;	-----------------------------------------
 ;	 function Display_loading
 ;	-----------------------------------------
@@ -1240,7 +1260,7 @@ _Display_loading:
 	mov	r5,dpl
 	mov	r6,dph
 	mov	r7,b
-;	App/components/sevenSegmentDisplay.c:170: Display_clear();
+;	App/components/sevenSegmentDisplay.c:171: Display_clear();
 	push	ar7
 	push	ar6
 	push	ar5
@@ -1248,7 +1268,7 @@ _Display_loading:
 	pop	ar5
 	pop	ar6
 	pop	ar7
-;	App/components/sevenSegmentDisplay.c:172: switch ((*currentPos))
+;	App/components/sevenSegmentDisplay.c:173: switch ((*currentPos))
 	mov	dpl,r5
 	mov	dph,r6
 	mov	b,r7
@@ -1290,9 +1310,9 @@ _Display_loading:
 	.db	00108$>>8
 	.db	00110$>>8
 	.db	00110$>>8
-;	App/components/sevenSegmentDisplay.c:176: case 2:
+;	App/components/sevenSegmentDisplay.c:177: case 2:
 00103$:
-;	App/components/sevenSegmentDisplay.c:177: display_buffer[(*currentPos)] = 0b00000001;
+;	App/components/sevenSegmentDisplay.c:178: display_buffer[(*currentPos)] = 0b00000001;
 	mov	a,r4
 	add	a,#_display_buffer
 	mov	dpl,a
@@ -1301,11 +1321,11 @@ _Display_loading:
 	mov	dph,a
 	mov	a,#0x01
 	movx	@dptr,a
-;	App/components/sevenSegmentDisplay.c:178: break;
-;	App/components/sevenSegmentDisplay.c:180: case 4:
+;	App/components/sevenSegmentDisplay.c:179: break;
+;	App/components/sevenSegmentDisplay.c:181: case 4:
 	sjmp	00112$
 00105$:
-;	App/components/sevenSegmentDisplay.c:181: display_buffer[2] = (0 | 1 << 1 + ((*currentPos)-3));
+;	App/components/sevenSegmentDisplay.c:182: display_buffer[2] = (0 | 1 << 1 + ((*currentPos)-3));
 	mov	ar3,r4
 	mov	a,#0xfe
 	add	a,r3
@@ -1320,11 +1340,11 @@ _Display_loading:
 	mov	r3,a
 	mov	dptr,#(_display_buffer + 0x0002)
 	movx	@dptr,a
-;	App/components/sevenSegmentDisplay.c:182: break;            
-;	App/components/sevenSegmentDisplay.c:185: case 7:
+;	App/components/sevenSegmentDisplay.c:183: break;            
+;	App/components/sevenSegmentDisplay.c:186: case 7:
 	sjmp	00112$
 00108$:
-;	App/components/sevenSegmentDisplay.c:186: display_buffer[(((*currentPos)-5)*-1)+2] = 0b00001000;
+;	App/components/sevenSegmentDisplay.c:187: display_buffer[(((*currentPos)-5)*-1)+2] = 0b00001000;
 	mov	ar3,r4
 	mov	a,r3
 	add	a,#0xfb
@@ -1347,11 +1367,11 @@ _Display_loading:
 	mov	dph,a
 	mov	a,#0x08
 	movx	@dptr,a
-;	App/components/sevenSegmentDisplay.c:190: break;
-;	App/components/sevenSegmentDisplay.c:192: case 9:
+;	App/components/sevenSegmentDisplay.c:191: break;
+;	App/components/sevenSegmentDisplay.c:193: case 9:
 	sjmp	00112$
 00110$:
-;	App/components/sevenSegmentDisplay.c:193: display_buffer[0] = (0 | 1 << 4 + ((*currentPos)-8));
+;	App/components/sevenSegmentDisplay.c:194: display_buffer[0] = (0 | 1 << 4 + ((*currentPos)-8));
 	mov	a,#0xfc
 	add	a,r4
 	mov	b,a
@@ -1365,17 +1385,17 @@ _Display_loading:
 	mov	r4,a
 	mov	dptr,#_display_buffer
 	movx	@dptr,a
-;	App/components/sevenSegmentDisplay.c:194: break;
-;	App/components/sevenSegmentDisplay.c:195: default:
+;	App/components/sevenSegmentDisplay.c:195: break;
+;	App/components/sevenSegmentDisplay.c:196: default:
 	sjmp	00112$
 00111$:
-;	App/components/sevenSegmentDisplay.c:196: (*currentPos) = 0;
+;	App/components/sevenSegmentDisplay.c:197: (*currentPos) = 0;
 	mov	dpl,r5
 	mov	dph,r6
 	mov	b,r7
 	clr	a
 	lcall	__gptrput
-;	App/components/sevenSegmentDisplay.c:197: display_buffer[(*currentPos)] = 0b00000001;
+;	App/components/sevenSegmentDisplay.c:198: display_buffer[(*currentPos)] = 0b00000001;
 	mov	dpl,r5
 	mov	dph,r6
 	mov	b,r7
@@ -1388,9 +1408,9 @@ _Display_loading:
 	mov	dph,a
 	mov	a,#0x01
 	movx	@dptr,a
-;	App/components/sevenSegmentDisplay.c:199: }
+;	App/components/sevenSegmentDisplay.c:200: }
 00112$:
-;	App/components/sevenSegmentDisplay.c:202: (*currentPos)++;
+;	App/components/sevenSegmentDisplay.c:203: (*currentPos)++;
 	mov	dpl,r5
 	mov	dph,r6
 	mov	b,r7
@@ -1401,8 +1421,22 @@ _Display_loading:
 	mov	dph,r6
 	mov	b,r7
 	mov	a,r4
-;	App/components/sevenSegmentDisplay.c:205: }
+;	App/components/sevenSegmentDisplay.c:204: }
 	ljmp	__gptrput
+;------------------------------------------------------------
+;Allocation info for local variables in function 'Display_toggleLed'
+;------------------------------------------------------------
+;state                     Allocated to registers 
+;------------------------------------------------------------
+;	App/components/sevenSegmentDisplay.c:207: void Display_toggleLed(bool state)
+;	-----------------------------------------
+;	 function Display_toggleLed
+;	-----------------------------------------
+_Display_toggleLed:
+	mov	_ledState,dpl
+;	App/components/sevenSegmentDisplay.c:209: ledState = state;
+;	App/components/sevenSegmentDisplay.c:210: }
+	ret
 	.area CSEG    (CODE)
 	.area CONST   (CODE)
 	.area CONST   (CODE)

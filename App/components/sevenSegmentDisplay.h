@@ -26,5 +26,6 @@ void Display_clear();
 void Display_printNumber(int number);
 void Display_marquee(const char* text, __xdata uint8_t size, uint8_t* currentPos);
 void Display_loading(uint8_t* currentPos);
+void Display_toggleLed(bool state);
 
 #endif

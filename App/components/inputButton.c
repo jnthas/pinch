@@ -1,5 +1,6 @@
 #include "inputButton.h"
 
+// Both analog pins, may use it in the future
 #define BUTTON_A 11
 #define BUTTON_B 32
 

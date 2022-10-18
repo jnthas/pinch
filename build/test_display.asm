@@ -19,6 +19,7 @@
 	.globl _Button_B_press
 	.globl _Button_A_press
 	.globl _Button_setup
+	.globl _Display_toggleLed
 	.globl _Display_printNumber
 	.globl _Display_clear
 	.globl _Display_update
@@ -933,8 +934,6 @@ _testReadBytes:
 ;Allocation info for local variables in function 'main'
 ;------------------------------------------------------------
 ;m                         Allocated to registers 
-;btn1                      Allocated to registers 
-;btn2                      Allocated to registers 
 ;------------------------------------------------------------
 ;	App/test_display.c:75: void main()
 ;	-----------------------------------------
@@ -959,9 +958,9 @@ _main:
 ;	App/test_display.c:88: mDelaymS(100);
 	mov	dptr,#0x0064
 	lcall	_mDelaymS
-;	App/test_display.c:94: while(1) {
+;	App/test_display.c:92: while(1) {
 00113$:
-;	App/test_display.c:128: if (lastMillis - millis() >= 100) {
+;	App/test_display.c:107: if (lastMillis - millis() >= 100) {
 	lcall	_millis
 	mov	r6,dpl
 	mov	r7,dph
@@ -991,13 +990,13 @@ _main:
 	mov	a,r4
 	subb	a,#0x00
 	jc	00111$
-;	App/test_display.c:129: Display_clear();
+;	App/test_display.c:108: Display_clear();
 	lcall	_Display_clear
-;	App/test_display.c:131: if (Button_C_press())
+;	App/test_display.c:110: if (Button_C_press())
 	lcall	_Button_C_press
 	mov	a,dpl
 	jz	00108$
-;	App/test_display.c:132: Display_setDigit('3', 2);
+;	App/test_display.c:111: Display_setDigit('3', 2);
 	mov	dptr,#_Display_setDigit_PARM_2
 	mov	a,#0x02
 	movx	@dptr,a
@@ -1005,51 +1004,53 @@ _main:
 	lcall	_Display_setDigit
 	sjmp	00109$
 00108$:
-;	App/test_display.c:133: else if (Button_A_press()) {
+;	App/test_display.c:112: else if (Button_A_press()) {
 	lcall	_Button_A_press
 	mov	a,dpl
 	jz	00105$
-;	App/test_display.c:134: Display_setDigit('1', 2);
+;	App/test_display.c:113: Display_setDigit('1', 2);
 	mov	dptr,#_Display_setDigit_PARM_2
 	mov	a,#0x02
 	movx	@dptr,a
 	mov	dpl,#0x31
 	lcall	_Display_setDigit
-;	App/test_display.c:135: testReadDeviceId();
-	lcall	_testReadDeviceId
+;	App/test_display.c:114: Display_toggleLed(true);
+	mov	dpl,#0x01
+	lcall	_Display_toggleLed
 	sjmp	00109$
 00105$:
-;	App/test_display.c:136: } else if (Button_B_press()) {
+;	App/test_display.c:116: } else if (Button_B_press()) {
 	lcall	_Button_B_press
 	mov	a,dpl
 	jz	00102$
-;	App/test_display.c:137: Display_setDigit('2', 2);
+;	App/test_display.c:117: Display_setDigit('2', 2);
 	mov	dptr,#_Display_setDigit_PARM_2
 	mov	a,#0x02
 	movx	@dptr,a
 	mov	dpl,#0x32
 	lcall	_Display_setDigit
-;	App/test_display.c:138: testReadBytes();
-	lcall	_testReadBytes
+;	App/test_display.c:118: Display_toggleLed(false);
+	mov	dpl,#0x00
+	lcall	_Display_toggleLed
 	sjmp	00109$
 00102$:
-;	App/test_display.c:140: Display_setDigit('0', 2);
+;	App/test_display.c:120: Display_setDigit('0', 2);
 	mov	dptr,#_Display_setDigit_PARM_2
 	mov	a,#0x02
 	movx	@dptr,a
 	mov	dpl,#0x30
 	lcall	_Display_setDigit
 00109$:
-;	App/test_display.c:142: lastMillis=0;
+;	App/test_display.c:122: lastMillis=0;
 	clr	a
 	mov	_lastMillis,a
 	mov	(_lastMillis + 1),a
 	mov	(_lastMillis + 2),a
 	mov	(_lastMillis + 3),a
 00111$:
-;	App/test_display.c:146: Display_update();
+;	App/test_display.c:126: Display_update();
 	lcall	_Display_update
-;	App/test_display.c:148: lastMillis+=4;
+;	App/test_display.c:128: lastMillis+=4;
 	mov	a,#0x04
 	add	a,_lastMillis
 	mov	_lastMillis,a
@@ -1062,7 +1063,7 @@ _main:
 	clr	a
 	addc	a,(_lastMillis + 3)
 	mov	(_lastMillis + 3),a
-;	App/test_display.c:151: }
+;	App/test_display.c:131: }
 	ljmp	00113$
 	.area CSEG    (CODE)
 	.area CONST   (CODE)

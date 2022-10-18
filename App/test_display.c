@@ -111,10 +111,11 @@ void main()
                 Display_setDigit('3', 2);
             else if (Button_A_press()) {
                 Display_setDigit('1', 2);
-                testReadDeviceId();
+                Display_toggleLed(true);
+
             } else if (Button_B_press()) {
                 Display_setDigit('2', 2);
-                testReadBytes();
+                Display_toggleLed(false);
             } else 
                 Display_setDigit('0', 2);
             

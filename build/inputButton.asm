@@ -556,9 +556,9 @@ _buttonBPressed::
 	.area GSINIT  (CODE)
 	.area GSFINAL (CODE)
 	.area GSINIT  (CODE)
-;	App/components/inputButton.c:6: bool buttonAPressed = false;
+;	App/components/inputButton.c:7: bool buttonAPressed = false;
 	mov	_buttonAPressed,#0x00
-;	App/components/inputButton.c:7: bool buttonBPressed = false;
+;	App/components/inputButton.c:8: bool buttonBPressed = false;
 	mov	_buttonBPressed,#0x00
 ;--------------------------------------------------------
 ; Home
@@ -572,7 +572,7 @@ _buttonBPressed::
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Button_setup'
 ;------------------------------------------------------------
-;	App/components/inputButton.c:9: void Button_setup() {
+;	App/components/inputButton.c:10: void Button_setup() {
 ;	-----------------------------------------
 ;	 function Button_setup
 ;	-----------------------------------------
@@ -585,30 +585,30 @@ _Button_setup:
 	ar2 = 0x02
 	ar1 = 0x01
 	ar0 = 0x00
-;	App/components/inputButton.c:11: p3Mode(2, INPUT);
+;	App/components/inputButton.c:12: p3Mode(2, INPUT);
 	mov	dptr,#_p3Mode_PARM_2
 	clr	a
 	movx	@dptr,a
 	mov	dpl,#0x02
 	lcall	_p3Mode
-;	App/components/inputButton.c:12: p1Mode(1, INPUT);
+;	App/components/inputButton.c:13: p1Mode(1, INPUT);
 	mov	dptr,#_p1Mode_PARM_2
 	clr	a
 	movx	@dptr,a
 	mov	dpl,#0x01
-;	App/components/inputButton.c:13: }
+;	App/components/inputButton.c:14: }
 	ljmp	_p1Mode
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Button_A_press'
 ;------------------------------------------------------------
-;	App/components/inputButton.c:15: bool Button_A_press() 
+;	App/components/inputButton.c:16: bool Button_A_press() 
 ;	-----------------------------------------
 ;	 function Button_A_press
 ;	-----------------------------------------
 _Button_A_press:
-;	App/components/inputButton.c:17: buttonAPressed = true;
+;	App/components/inputButton.c:18: buttonAPressed = true;
 	mov	_buttonAPressed,#0x01
-;	App/components/inputButton.c:18: return (analogRead(BUTTON_A) > 80);
+;	App/components/inputButton.c:19: return (analogRead(BUTTON_A) > 80);
 	mov	dpl,#0x0b
 	lcall	_analogRead
 	mov	r7,dpl
@@ -618,17 +618,17 @@ _Button_A_press:
 	clr	a
 	rlc	a
 	mov	dpl,a
-;	App/components/inputButton.c:19: }
+;	App/components/inputButton.c:20: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Button_A_release'
 ;------------------------------------------------------------
-;	App/components/inputButton.c:21: bool Button_A_release()
+;	App/components/inputButton.c:22: bool Button_A_release()
 ;	-----------------------------------------
 ;	 function Button_A_release
 ;	-----------------------------------------
 _Button_A_release:
-;	App/components/inputButton.c:23: if (buttonAPressed && (analogRead(BUTTON_A) < 10)) 
+;	App/components/inputButton.c:24: if (buttonAPressed && (analogRead(BUTTON_A) < 10)) 
 	mov	a,_buttonAPressed
 	jz	00102$
 	mov	dpl,#0x0b
@@ -637,27 +637,27 @@ _Button_A_release:
 	cjne	r7,#0x0a,00115$
 00115$:
 	jnc	00102$
-;	App/components/inputButton.c:25: buttonAPressed = false;
+;	App/components/inputButton.c:26: buttonAPressed = false;
 	mov	_buttonAPressed,#0x00
-;	App/components/inputButton.c:26: return true;
+;	App/components/inputButton.c:27: return true;
 	mov	dpl,#0x01
 	ret
 00102$:
-;	App/components/inputButton.c:28: return false;
+;	App/components/inputButton.c:29: return false;
 	mov	dpl,#0x00
-;	App/components/inputButton.c:29: }
+;	App/components/inputButton.c:30: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Button_B_press'
 ;------------------------------------------------------------
-;	App/components/inputButton.c:31: bool Button_B_press()
+;	App/components/inputButton.c:32: bool Button_B_press()
 ;	-----------------------------------------
 ;	 function Button_B_press
 ;	-----------------------------------------
 _Button_B_press:
-;	App/components/inputButton.c:33: buttonBPressed = true;
+;	App/components/inputButton.c:34: buttonBPressed = true;
 	mov	_buttonBPressed,#0x01
-;	App/components/inputButton.c:34: return (analogRead(BUTTON_B) > 80);
+;	App/components/inputButton.c:35: return (analogRead(BUTTON_B) > 80);
 	mov	dpl,#0x20
 	lcall	_analogRead
 	mov	r7,dpl
@@ -667,17 +667,17 @@ _Button_B_press:
 	clr	a
 	rlc	a
 	mov	dpl,a
-;	App/components/inputButton.c:35: }
+;	App/components/inputButton.c:36: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Button_B_release'
 ;------------------------------------------------------------
-;	App/components/inputButton.c:36: bool Button_B_release()
+;	App/components/inputButton.c:37: bool Button_B_release()
 ;	-----------------------------------------
 ;	 function Button_B_release
 ;	-----------------------------------------
 _Button_B_release:
-;	App/components/inputButton.c:38: if (buttonBPressed && (analogRead(BUTTON_B) < 10)) 
+;	App/components/inputButton.c:39: if (buttonBPressed && (analogRead(BUTTON_B) < 10)) 
 	mov	a,_buttonBPressed
 	jz	00102$
 	mov	dpl,#0x20
@@ -686,25 +686,25 @@ _Button_B_release:
 	cjne	r7,#0x0a,00115$
 00115$:
 	jnc	00102$
-;	App/components/inputButton.c:40: buttonBPressed = false;
+;	App/components/inputButton.c:41: buttonBPressed = false;
 	mov	_buttonBPressed,#0x00
-;	App/components/inputButton.c:41: return true;
+;	App/components/inputButton.c:42: return true;
 	mov	dpl,#0x01
 	ret
 00102$:
-;	App/components/inputButton.c:43: return false;
+;	App/components/inputButton.c:44: return false;
 	mov	dpl,#0x00
-;	App/components/inputButton.c:44: }
+;	App/components/inputButton.c:45: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Button_C_press'
 ;------------------------------------------------------------
-;	App/components/inputButton.c:46: bool Button_C_press()
+;	App/components/inputButton.c:47: bool Button_C_press()
 ;	-----------------------------------------
 ;	 function Button_C_press
 ;	-----------------------------------------
 _Button_C_press:
-;	App/components/inputButton.c:48: return Button_A_press() && Button_B_press();
+;	App/components/inputButton.c:49: return Button_A_press() && Button_B_press();
 	lcall	_Button_A_press
 	mov	a,dpl
 	jz	00103$
@@ -718,17 +718,17 @@ _Button_C_press:
 	mov	r7,#0x01
 00105$:
 	mov	dpl,r7
-;	App/components/inputButton.c:49: }
+;	App/components/inputButton.c:50: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Button_C_release'
 ;------------------------------------------------------------
-;	App/components/inputButton.c:51: bool Button_C_release()
+;	App/components/inputButton.c:52: bool Button_C_release()
 ;	-----------------------------------------
 ;	 function Button_C_release
 ;	-----------------------------------------
 _Button_C_release:
-;	App/components/inputButton.c:53: return Button_A_release() && Button_B_release();
+;	App/components/inputButton.c:54: return Button_A_release() && Button_B_release();
 	lcall	_Button_A_release
 	mov	a,dpl
 	jz	00103$
@@ -742,7 +742,7 @@ _Button_C_release:
 	mov	r7,#0x01
 00105$:
 	mov	dpl,r7
-;	App/components/inputButton.c:54: }
+;	App/components/inputButton.c:55: }
 	ret
 	.area CSEG    (CODE)
 	.area CONST   (CODE)

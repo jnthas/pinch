@@ -40,20 +40,15 @@ __xdata const uint8_t DisplayChars[CHAR_ARR_SIZE][2] = {
     {0b00001000,'_'}
 };
 
+bool ledState = false;
 
 void Display_setup() 
 {
-
-
-    p3Mode(1, OUTPUT);
     p3Mode(0, OUTPUT);
-    p3Mode(4, OUTPUT);
+    p3Mode(1, OUTPUT);
     p3Mode(3, OUTPUT);
-    
-
-
+    p3Mode(4, OUTPUT);
 }
-
 
 
 void Display_setDigit(__xdata char digit, __xdata uint8_t pos) {
@@ -118,11 +113,17 @@ void Display_update() {
     Display_unselect();
     Display_toggleOn(DIGIT_2_PIN);
     
-    Display_toggleOff();    
+    Display_toggleOff();
+    // Led state
+    display_buffer[2] |= ledState << 7;
     Display_select();
     CH554SPIMasterWrite(display_buffer[2]);
     Display_unselect();
-    Display_toggleOn(DIGIT_3_PIN);   
+    
+
+    Display_toggleOn(DIGIT_3_PIN);
+
+    
     
 }
 
@@ -200,6 +201,10 @@ void Display_loading(uint8_t* currentPos) {
 
     
     (*currentPos)++;
+}
 
-    
+
+void Display_toggleLed(bool state)
+{
+    ledState = state;
 }

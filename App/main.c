@@ -11,9 +11,6 @@
 #include "components/w25qxx.h"
 
 
-#define LED_PIN 0
-SBIT(LED, 0xB0, LED_PIN);
-
 #define PINCH_DEVCONTROL   0x11        // Device Control 1
 
 #define PINCH_STORE        0x0c        // Form Feed
