@@ -1,39 +1,39 @@
 #ifndef APP_PINCH_H
 #define APP_PINCH_H
 
-#include "../components/inputButton.h"
-#include "../components/sevenSegmentDisplay.h"
+#include <stdint.h>
+#include <string.h>
+
+#include "../core/Print.h"
+#include "../core/USBCDC.h"
+#include "../components/w25qxx.h"
 
 
 
-struct ProtocolStructure
-{
-  uint8_t control_flag;
-  uint8_t operation;
-  uint8_t param;
-  uint8_t payload_size;
-};
+#define PINCH_DEVCONTROL   0x11        // Device Control 1
 
+#define PINCH_STORE        0x0c        // Form Feed
+#define PINCH_LOAD         0x05        // Enquiry
+#define PINCH_ERASE        0x7f        // Delete
 
-enum ProtocolState {
-  
-  begin_of_transmission,
-  operation,
-  parameter,
-  payload,
-  end_of_transmission,
-  payload_error
-    
-} current_state;
+#define PINCH_DLE          0x10        // Data Link Escape
+#define PINCH_RS           0x1E        // Record Separator
+#define PINCH_EOT          0x04        // End Of Transmission
 
 
 void Pinch_setup();
 void Pinch_loop();
 
-uint32_t Pinch_getMemAddress(uint8_t slot, uint8_t sector_num, uint8_t page_num);
-void Pinch_store(uint8_t payload);
-void Pinch_load(uint8_t payload);
-void Pinch_handler(uint8_t payload);
+uint32_t Pinch_getMemAddress(__xdata uint8_t slot, __xdata uint8_t sector_num, __xdata uint8_t page_num);
+void Pinch_store(__xdata uint8_t payload);
+void Pinch_load(__xdata uint8_t payload);
+void Pinch_handler(__xdata uint8_t payload);
+
+void Pinch_nextBlock();
+void Pinch_nextSector();
+
+uint8_t Pinch_currentBlock();
+uint8_t Pinch_currentSector();
 
 
 #endif

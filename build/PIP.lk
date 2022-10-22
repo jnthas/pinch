@@ -16,7 +16,7 @@
 -l libint
 -l liblong
 -l libfloat
-build/test_display.rel
+build/main.rel
 build/USBCDC.rel
 build/USBconstant.rel
 build/USBhandler.rel
@@ -25,6 +25,7 @@ build/GPIO.rel
 build/w25qxx.rel
 build/sevenSegmentDisplay.rel
 build/inputButton.rel
+build/pinch.rel
 build/debug.rel
 build/spi.rel
 

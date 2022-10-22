@@ -540,6 +540,7 @@ _writeBytes_offset_65536_68:
 ;--------------------------------------------------------
 ; overlayable items in internal ram 
 ;--------------------------------------------------------
+	.area	OSEG    (OVR,DATA)
 ;--------------------------------------------------------
 ; indirectly addressable internal ram data
 ;--------------------------------------------------------
@@ -600,13 +601,13 @@ _UNIQUEID:
 ;--------------------------------------------------------
 	.area CSEG    (CODE)
 ;------------------------------------------------------------
-;Allocation info for local variables in function 'SPISetup'
+;Allocation info for local variables in function 'select'
 ;------------------------------------------------------------
-;	App/components/w25qxx.c:4: void SPISetup()
+;	App/components/w25qxx.c:4: void select()
 ;	-----------------------------------------
-;	 function SPISetup
+;	 function select
 ;	-----------------------------------------
-_SPISetup:
+_select:
 	ar7 = 0x07
 	ar6 = 0x06
 	ar5 = 0x05
@@ -615,42 +616,42 @@ _SPISetup:
 	ar2 = 0x02
 	ar1 = 0x01
 	ar0 = 0x00
-;	App/components/w25qxx.c:6: SPIMasterModeSet(3); // SPI master mode setting, mode 3
-	mov	dpl,#0x03
-	lcall	_SPIMasterModeSet
-;	App/components/w25qxx.c:7: SPI_CK_SET(2);       // divide by 2, fastest
-	mov	_SPI0_CK_SE,#0x02
-;	App/components/w25qxx.c:8: unselect();
-	lcall	_unselect
-;	App/components/w25qxx.c:9: wakeup();
-;	App/components/w25qxx.c:10: }
-	ljmp	_wakeup
-;------------------------------------------------------------
-;Allocation info for local variables in function 'select'
-;------------------------------------------------------------
-;	App/components/w25qxx.c:12: void select()
-;	-----------------------------------------
-;	 function select
-;	-----------------------------------------
-_select:
-;	App/components/w25qxx.c:14: SCS = 0;
+;	App/components/w25qxx.c:6: SCS = 0;
 ;	assignBit
 	clr	_SCS
-;	App/components/w25qxx.c:15: }
+;	App/components/w25qxx.c:7: }
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'unselect'
 ;------------------------------------------------------------
-;	App/components/w25qxx.c:17: void unselect()
+;	App/components/w25qxx.c:9: void unselect()
 ;	-----------------------------------------
 ;	 function unselect
 ;	-----------------------------------------
 _unselect:
-;	App/components/w25qxx.c:19: SCS = 1;
+;	App/components/w25qxx.c:11: SCS = 1;
 ;	assignBit
 	setb	_SCS
-;	App/components/w25qxx.c:20: }
+;	App/components/w25qxx.c:12: }
 	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'SPISetup'
+;------------------------------------------------------------
+;	App/components/w25qxx.c:14: void SPISetup()
+;	-----------------------------------------
+;	 function SPISetup
+;	-----------------------------------------
+_SPISetup:
+;	App/components/w25qxx.c:16: SPIMasterModeSet(3); // SPI master mode setting, mode 3
+	mov	dpl,#0x03
+	lcall	_SPIMasterModeSet
+;	App/components/w25qxx.c:17: SPI_CK_SET(2);       // divide by 2, fastest
+	mov	_SPI0_CK_SE,#0x02
+;	App/components/w25qxx.c:18: unselect();
+	lcall	_unselect
+;	App/components/w25qxx.c:19: wakeup();
+;	App/components/w25qxx.c:20: }
+	ljmp	_wakeup
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'sendCommand'
 ;------------------------------------------------------------

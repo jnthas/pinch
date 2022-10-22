@@ -503,10 +503,6 @@ _UIF_BUS_RST	=	0x00d8
 ; internal ram data
 ;--------------------------------------------------------
 	.area DSEG    (DATA)
-_buttonAPressed::
-	.ds 1
-_buttonBPressed::
-	.ds 1
 ;--------------------------------------------------------
 ; overlayable items in internal ram 
 ;--------------------------------------------------------
@@ -539,6 +535,10 @@ _buttonBPressed::
 ; external initialized ram data
 ;--------------------------------------------------------
 	.area XISEG   (XDATA)
+_buttonAPressed::
+	.ds 1
+_buttonBPressed::
+	.ds 1
 	.area HOME    (CODE)
 	.area GSINIT0 (CODE)
 	.area GSINIT1 (CODE)
@@ -556,10 +556,6 @@ _buttonBPressed::
 	.area GSINIT  (CODE)
 	.area GSFINAL (CODE)
 	.area GSINIT  (CODE)
-;	App/components/inputButton.c:7: bool buttonAPressed = false;
-	mov	_buttonAPressed,#0x00
-;	App/components/inputButton.c:8: bool buttonBPressed = false;
-	mov	_buttonBPressed,#0x00
 ;--------------------------------------------------------
 ; Home
 ;--------------------------------------------------------
@@ -607,7 +603,9 @@ _Button_setup:
 ;	-----------------------------------------
 _Button_A_press:
 ;	App/components/inputButton.c:18: buttonAPressed = true;
-	mov	_buttonAPressed,#0x01
+	mov	dptr,#_buttonAPressed
+	mov	a,#0x01
+	movx	@dptr,a
 ;	App/components/inputButton.c:19: return (analogRead(BUTTON_A) > 80);
 	mov	dpl,#0x0b
 	lcall	_analogRead
@@ -629,7 +627,8 @@ _Button_A_press:
 ;	-----------------------------------------
 _Button_A_release:
 ;	App/components/inputButton.c:24: if (buttonAPressed && (analogRead(BUTTON_A) < 10)) 
-	mov	a,_buttonAPressed
+	mov	dptr,#_buttonAPressed
+	movx	a,@dptr
 	jz	00102$
 	mov	dpl,#0x0b
 	lcall	_analogRead
@@ -638,7 +637,9 @@ _Button_A_release:
 00115$:
 	jnc	00102$
 ;	App/components/inputButton.c:26: buttonAPressed = false;
-	mov	_buttonAPressed,#0x00
+	mov	dptr,#_buttonAPressed
+	clr	a
+	movx	@dptr,a
 ;	App/components/inputButton.c:27: return true;
 	mov	dpl,#0x01
 	ret
@@ -656,7 +657,9 @@ _Button_A_release:
 ;	-----------------------------------------
 _Button_B_press:
 ;	App/components/inputButton.c:34: buttonBPressed = true;
-	mov	_buttonBPressed,#0x01
+	mov	dptr,#_buttonBPressed
+	mov	a,#0x01
+	movx	@dptr,a
 ;	App/components/inputButton.c:35: return (analogRead(BUTTON_B) > 80);
 	mov	dpl,#0x20
 	lcall	_analogRead
@@ -678,7 +681,8 @@ _Button_B_press:
 ;	-----------------------------------------
 _Button_B_release:
 ;	App/components/inputButton.c:39: if (buttonBPressed && (analogRead(BUTTON_B) < 10)) 
-	mov	a,_buttonBPressed
+	mov	dptr,#_buttonBPressed
+	movx	a,@dptr
 	jz	00102$
 	mov	dpl,#0x20
 	lcall	_analogRead
@@ -687,7 +691,9 @@ _Button_B_release:
 00115$:
 	jnc	00102$
 ;	App/components/inputButton.c:41: buttonBPressed = false;
-	mov	_buttonBPressed,#0x00
+	mov	dptr,#_buttonBPressed
+	clr	a
+	movx	@dptr,a
 ;	App/components/inputButton.c:42: return true;
 	mov	dpl,#0x01
 	ret
@@ -747,4 +753,8 @@ _Button_C_release:
 	.area CSEG    (CODE)
 	.area CONST   (CODE)
 	.area XINIT   (CODE)
+__xinit__buttonAPressed:
+	.db #0x00	;  0
+__xinit__buttonBPressed:
+	.db #0x00	;  0
 	.area CABS    (ABS,CODE)

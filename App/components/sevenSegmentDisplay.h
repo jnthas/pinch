@@ -23,9 +23,10 @@ void Display_select();
 void Display_unselect();
 void Display_update();
 void Display_clear();
-void Display_printNumber(int number);
+void Display_printNumber(__xdata int number);
 void Display_marquee(const char* text, __xdata uint8_t size, uint8_t* currentPos);
 void Display_loading(uint8_t* currentPos);
-void Display_toggleLed(bool state);
+void Display_setLed(__xdata bool state);
+void Display_toggleLed();
 
 #endif

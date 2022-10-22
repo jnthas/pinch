@@ -262,6 +262,7 @@
 	.globl _Display_printNumber
 	.globl _Display_marquee
 	.globl _Display_loading
+	.globl _Display_setLed
 	.globl _Display_toggleLed
 ;--------------------------------------------------------
 ; special function registers
@@ -526,7 +527,6 @@ _Display_marquee_text_65536_128:
 ; overlayable items in internal ram 
 ;--------------------------------------------------------
 	.area	OSEG    (OVR,DATA)
-	.area	OSEG    (OVR,DATA)
 ;--------------------------------------------------------
 ; indirectly addressable internal ram data
 ;--------------------------------------------------------
@@ -554,7 +554,11 @@ _Display_setDigit_digit_65536_108:
 	.ds 1
 _Display_toggleOn_pin_65536_113:
 	.ds 1
+_Display_printNumber_number_65536_122:
+	.ds 2
 _Display_marquee_PARM_2:
+	.ds 1
+_Display_setLed_state_65536_133:
 	.ds 1
 ;--------------------------------------------------------
 ; absolute external ram data
@@ -940,17 +944,28 @@ _Display_clear:
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_printNumber'
 ;------------------------------------------------------------
-;number                    Allocated to registers r6 r7 
 ;numchar                   Allocated with name '_Display_printNumber_numchar_65536_123'
+;number                    Allocated with name '_Display_printNumber_number_65536_122'
 ;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:136: void Display_printNumber(int number) {
+;	App/components/sevenSegmentDisplay.c:136: void Display_printNumber(__xdata int number) {
 ;	-----------------------------------------
 ;	 function Display_printNumber
 ;	-----------------------------------------
 _Display_printNumber:
-	mov	r6,dpl
 	mov	r7,dph
+	mov	a,dpl
+	mov	dptr,#_Display_printNumber_number_65536_122
+	movx	@dptr,a
+	mov	a,r7
+	inc	dptr
+	movx	@dptr,a
 ;	App/components/sevenSegmentDisplay.c:139: sprintf(numchar, "%d", number);
+	mov	dptr,#_Display_printNumber_number_65536_122
+	movx	a,@dptr
+	mov	r6,a
+	inc	dptr
+	movx	a,@dptr
+	mov	r7,a
 	push	ar7
 	push	ar6
 	push	ar6
@@ -1424,18 +1439,39 @@ _Display_loading:
 ;	App/components/sevenSegmentDisplay.c:204: }
 	ljmp	__gptrput
 ;------------------------------------------------------------
+;Allocation info for local variables in function 'Display_setLed'
+;------------------------------------------------------------
+;state                     Allocated with name '_Display_setLed_state_65536_133'
+;------------------------------------------------------------
+;	App/components/sevenSegmentDisplay.c:207: void Display_setLed(__xdata bool state)
+;	-----------------------------------------
+;	 function Display_setLed
+;	-----------------------------------------
+_Display_setLed:
+	mov	a,dpl
+	mov	dptr,#_Display_setLed_state_65536_133
+	movx	@dptr,a
+;	App/components/sevenSegmentDisplay.c:209: ledState = state;
+	movx	a,@dptr
+	mov	_ledState,a
+;	App/components/sevenSegmentDisplay.c:210: }
+	ret
+;------------------------------------------------------------
 ;Allocation info for local variables in function 'Display_toggleLed'
 ;------------------------------------------------------------
-;state                     Allocated to registers 
-;------------------------------------------------------------
-;	App/components/sevenSegmentDisplay.c:207: void Display_toggleLed(bool state)
+;	App/components/sevenSegmentDisplay.c:212: void Display_toggleLed()
 ;	-----------------------------------------
 ;	 function Display_toggleLed
 ;	-----------------------------------------
 _Display_toggleLed:
-	mov	_ledState,dpl
-;	App/components/sevenSegmentDisplay.c:209: ledState = state;
-;	App/components/sevenSegmentDisplay.c:210: }
+;	App/components/sevenSegmentDisplay.c:214: ledState = !ledState;
+	mov	a,_ledState
+	cjne	a,#0x01,00103$
+00103$:
+	clr	a
+	rlc	a
+	mov	_ledState,a
+;	App/components/sevenSegmentDisplay.c:215: }
 	ret
 	.area CSEG    (CODE)
 	.area CONST   (CODE)

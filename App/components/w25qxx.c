@@ -1,14 +1,6 @@
 
 #include "w25qxx.h"
 
-void SPISetup()
-{
-  SPIMasterModeSet(3); // SPI master mode setting, mode 3
-  SPI_CK_SET(2);       // divide by 2, fastest
-  unselect();
-  wakeup();
-}
-
 void select()
 {
   SCS = 0;
@@ -17,6 +9,14 @@ void select()
 void unselect()
 {
   SCS = 1;
+}
+
+void SPISetup()
+{
+  SPIMasterModeSet(3); // SPI master mode setting, mode 3
+  SPI_CK_SET(2);       // divide by 2, fastest
+  unselect();
+  wakeup();
 }
 
 void sendCommand(uint8_t cmd)

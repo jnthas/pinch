@@ -4,8 +4,8 @@
 #define BUTTON_A 11
 #define BUTTON_B 32
 
-bool buttonAPressed = false;
-bool buttonBPressed = false;
+__xdata bool buttonAPressed = false;
+__xdata bool buttonBPressed = false;
 
 void Button_setup() {
 

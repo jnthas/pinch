@@ -133,7 +133,7 @@ void Display_clear() {
     display_buffer[2] = 0;
 }
 
-void Display_printNumber(int number) {
+void Display_printNumber(__xdata int number) {
 
     char numchar[3];
     sprintf(numchar, "%d", number);
@@ -204,7 +204,12 @@ void Display_loading(uint8_t* currentPos) {
 }
 
 
-void Display_toggleLed(bool state)
+void Display_setLed(__xdata bool state)
 {
     ledState = state;
+}
+
+void Display_toggleLed()
+{
+    ledState = !ledState;
 }
