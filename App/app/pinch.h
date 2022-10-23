@@ -9,6 +9,12 @@
 #include "../components/w25qxx.h"
 
 
+/*
+ERASE: echo -e "\x11\x7f\x01\x01\x01\x1e\x04" > /dev/ttyACM0
+STORE: echo -e "\x11\x0c\x01\x041234\x1e\x02\x0ewww.google.com\x1e\x03\x00my super strong passssword\x10\x1e\x04" > /dev/ttyACM0 
+LOAD : echo -e "\x11\x05\x01\x01\x01\x1e\x04" > /dev/ttyACM0
+*/
+
 
 #define PINCH_DEVCONTROL   0x11        // Device Control 1
 
@@ -24,7 +30,7 @@
 void Pinch_setup();
 void Pinch_loop();
 
-uint32_t Pinch_getMemAddress(__xdata uint8_t slot, __xdata uint8_t sector_num, __xdata uint8_t page_num);
+uint32_t Pinch_getMemAddress(__xdata uint8_t block, __xdata uint8_t sector, __xdata uint8_t page);
 void Pinch_store(__xdata uint8_t payload);
 void Pinch_load(__xdata uint8_t payload);
 void Pinch_handler(__xdata uint8_t payload);

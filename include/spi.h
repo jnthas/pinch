@@ -6,8 +6,8 @@
 
 #define  SPI_CK_SET( n ) (SPI0_CK_SE = n)                                     //SPIÊ±ÖÓÉèÖÃº¯Êý 
 
-#define SPIMasterAssertCS() (SCS = 0)
-#define SPIMasterDeassertCS() (SCS = 1)
+#define SPIMasterChipSelect() (SCS = 0)
+#define SPIMasterChipUnselect() (SCS = 1)
 
 
 /*******************************************************************************

@@ -25,7 +25,7 @@ uint8_t printText(char *__xdata str)
   return n;
 }
 
-uint8_t printTextArray(uint8_t *__xdata buffer, __xdata uint8_t size)
+uint8_t printTextArray(uint8_t * buffer, uint8_t size)
 {
   uint8_t n = 0;
   while (size--)
@@ -38,9 +38,9 @@ uint8_t printTextArray(uint8_t *__xdata buffer, __xdata uint8_t size)
   return n;
 }
 
-uint8_t printNumbers(__xdata unsigned long n, __xdata uint8_t base)
+uint8_t printNumbers(__xdata uint32_t n, __xdata uint8_t base)
 {
-  __xdata char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
+  __xdata char buf[8 * sizeof(uint32_t) + 1]; // Assumes 8-bit chars plus zero byte.
   __xdata char *str = &buf[sizeof(buf) - 1];
 
   *str = '\0';

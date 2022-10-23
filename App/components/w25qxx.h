@@ -31,11 +31,11 @@
                                               // Example for Winbond 4Mbit W25X40CL: 0xEF30 (page 14: http://www.winbond.com/NR/rdonlyres/6E25084C-0BFE-4B25-903D-AE10221A0929/0/W25X40CL.pdf)
 #define SPIFLASH_MACREAD          0x4B        // read unique ID number (MAC)
 
-#define BUFFER_SIZE 32
+#define FLASH_BUFFER_SIZE 32
 
 
 static __xdata uint8_t UNIQUEID[8] = {0};
-static __xdata uint8_t _sbuffer[BUFFER_SIZE];
+static __xdata uint8_t _sbuffer[FLASH_BUFFER_SIZE];
 
 
 /* Hardware interface definition */

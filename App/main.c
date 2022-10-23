@@ -19,13 +19,13 @@ void DeviceUSBInterrupt(void) __interrupt(INT_NO_USB) // USB interrupt service
 __xdata uint8_t displayPos = 0;
 __xdata unsigned long currentMillis = 0;
 
+
 void setup()
 {
   CfgFsys();
   mDelaymS(10);
 
   USBInit();
-  USBSerial();
   SPISetup();
 
   Display_setup();
@@ -33,38 +33,25 @@ void setup()
   Pinch_setup();
 }
 
+void pinchButtonEvent(ButtonState event) {
+
+    if (event == BUTTON_A_RELEASED)
+      Pinch_nextBlock();
+    else if (event == BUTTON_B_RELEASED)
+      Pinch_nextSector();
+    else if (event == BUTTON_C_RELEASED) {
+      //Pinch_load(0); 
+      //Pinch_load(1); 
+      Pinch_load(2); 
+    }
+}
+
+
+
 void loop()
 {
 
-  // if (currentMillis >= 75) 
-  // {
-  //  Display_loading(displayPos);
-  //  currentMillis = 0;
-  // }
-
-
-    // if (currentMillis >= 1000) {
-    //   Display_printNumber(displayPos++);
-    //   currentMillis = 0;
-
-    // }
-
-
-  if (currentMillis >= 150) {
-    
-
-    if (Button_C_press()) {
-      printText("\nCurrent Block: ");
-      printNumbers(Pinch_currentBlock(), DEC);
-      printText("\nCurrent Sector: ");
-      printNumbers(Pinch_currentSector(), DEC);
-    } else if (Button_A_press()) {
-      Pinch_nextBlock();
-    } else if (Button_B_press()) {
-      Pinch_nextSector();
-    }
-
-
+  if (currentMillis >= 100) {
 
     Display_setDigit(Pinch_currentBlock()+65, 0);
     Display_setDigit(Pinch_currentSector() < 10 ? '0' : '1', 1);
@@ -72,10 +59,10 @@ void loop()
 
     currentMillis = 0;
   }
-  
 
   Pinch_loop();
   Display_update();
+  Button_loop(&pinchButtonEvent);
 
 }
 

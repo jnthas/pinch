@@ -1,21 +1,11 @@
 
 #include "w25qxx.h"
 
-void select()
-{
-  SCS = 0;
-}
-
-void unselect()
-{
-  SCS = 1;
-}
-
 void SPISetup()
 {
   SPIMasterModeSet(3); // SPI master mode setting, mode 3
   SPI_CK_SET(2);       // divide by 2, fastest
-  unselect();
+  SPIMasterChipUnselect();
   wakeup();
 }
 
@@ -23,7 +13,7 @@ void sendCommand(uint8_t cmd)
 {
   if (cmd != SPIFLASH_WAKE) while(busy());
 
-  select();
+  SPIMasterChipSelect();
   CH554SPIMasterWrite(cmd);
 }
 
@@ -36,7 +26,7 @@ uint16_t readDeviceId()
   mDelayuS(2);
   id = CH554SPIMasterRead() << 8;
   id |= CH554SPIMasterRead();
-  unselect();
+  SPIMasterChipUnselect();
 
   return id;
 }
@@ -54,7 +44,7 @@ uint8_t *readUniqueId()
   {
     UNIQUEID[a] = CH554SPIMasterRead();
   }
-  unselect();
+  SPIMasterChipUnselect();
 
   return UNIQUEID;
 }
@@ -67,7 +57,7 @@ uint8_t readByte(__xdata uint32_t addr)
   CH554SPIMasterWrite(addr);
   mDelayuS(2);
   uint8_t result = CH554SPIMasterRead();
-  unselect();
+  SPIMasterChipUnselect();
 
   // printf("%02X.", result);
 
@@ -84,16 +74,16 @@ void readBytes(__xdata uint32_t addr, void *buf, __xdata uint16_t len)
   CH554SPIMasterWrite(0); //"dont care"
   for (uint16_t i = 0; i < len; ++i)
     ((uint8_t *)buf)[i] = CH554SPIMasterRead();
-  unselect();
+  SPIMasterChipUnselect();
 }
 
 /// return the STATUS register
 uint8_t readStatus()
 {
-  select();  
+  SPIMasterChipSelect();  
   CH554SPIMasterWrite(SPIFLASH_STATUSREAD);
   uint8_t status = CH554SPIMasterRead();
-  unselect();
+  SPIMasterChipUnselect();
   return status;
 }
 
@@ -106,7 +96,7 @@ bool busy()
 void enableWrite()
 {
   sendCommand(SPIFLASH_WRITEENABLE);
-  unselect();
+  SPIMasterChipUnselect();
 }
 
 void writeByte(__xdata uint32_t addr, uint8_t byt)
@@ -117,7 +107,7 @@ void writeByte(__xdata uint32_t addr, uint8_t byt)
   CH554SPIMasterWrite(addr >> 8);
   CH554SPIMasterWrite(addr);
   CH554SPIMasterWrite(byt);
-  unselect();
+  SPIMasterChipUnselect();
 }
 
 
@@ -141,7 +131,7 @@ void writeBytes(__xdata uint32_t addr, const void* buf, __xdata uint16_t len) {
     
     for (uint16_t i = 0; i < n; i++)
       CH554SPIMasterWrite(((uint8_t*) buf)[offset + i]);
-    unselect();
+    SPIMasterChipUnselect();
     
     addr+=n;  // adjust the addresses and remaining bytes by what we've just transferred.
     offset +=n;
@@ -159,7 +149,7 @@ void writeBytes(__xdata uint32_t addr, const void* buf, __xdata uint16_t len) {
 void chipErase() {
   enableWrite();
   sendCommand(SPIFLASH_CHIPERASE);
-  unselect();
+  SPIMasterChipUnselect();
 }
 
 /// erase a 4Kbyte block
@@ -169,7 +159,7 @@ void blockErase4K(__xdata uint32_t addr) {
   CH554SPIMasterWrite(addr >> 16);
   CH554SPIMasterWrite(addr >> 8);
   CH554SPIMasterWrite(addr);
-  unselect();
+  SPIMasterChipUnselect();
 }
 
 
@@ -180,7 +170,7 @@ void blockErase4K(__xdata uint32_t addr) {
 ///   should always be invoked before any other commands to ensure the flash chip was not left in sleep
 void sleep() {
   sendCommand(SPIFLASH_SLEEP);
-  unselect();
+  SPIMasterChipUnselect();
 }
 
 /// Wake flash memory from power down mode
@@ -189,5 +179,5 @@ void sleep() {
 ///   should always be invoked before any other commands to ensure the flash chip was not left in sleep
 void wakeup() {
   sendCommand(SPIFLASH_WAKE);
-  unselect();
+  SPIMasterChipUnselect();
 }

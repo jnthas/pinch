@@ -1,6 +1,6 @@
 #include "sevenSegmentDisplay.h"
 
-#define CHAR_ARR_SIZE 25
+#define CHAR_ARR_SIZE 26
 
 #define DIGIT_1_PIN 31
 #define DIGIT_2_PIN 30
@@ -34,6 +34,8 @@ __code const uint8_t DisplayChars[CHAR_ARR_SIZE][2] = {
     {0b01010100,'n'},
     {0b01011000,'c'},
     {0b01110100,'h'},
+    
+    {0b01101110,'Y'},
     
     {0b01000000,'-'},
     {0b00000001,'^'},
