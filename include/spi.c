@@ -12,8 +12,8 @@ If the chip selection is already valid, the data data can use SPI0_DATA
 *******************************************************************************/
 
 
-#include <ch554.h>
 #include <stdint.h>
+#include <ch552.h>
 #include "spi.h" 
 
 /*******************************************************************************

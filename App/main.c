@@ -17,7 +17,7 @@ void DeviceUSBInterrupt(void) __interrupt(INT_NO_USB) // USB interrupt service
 }
 
 __xdata uint8_t displayPos = 0;
-__xdata long lastTimeMillis = 0;
+__xdata unsigned long currentMillis = 0;
 
 void setup()
 {
@@ -35,49 +35,60 @@ void setup()
 
 void loop()
 {
-  while (1)
-  {
-    //if (lastTimeMillis >= 75) 
-    //{
-    //  Display_loading(displayPos);
-    //  lastTimeMillis = 0;
-    //}
+
+  // if (currentMillis >= 75) 
+  // {
+  //  Display_loading(displayPos);
+  //  currentMillis = 0;
+  // }
 
 
-    if (lastTimeMillis >= 150) {
-      
+    // if (currentMillis >= 1000) {
+    //   Display_printNumber(displayPos++);
+    //   currentMillis = 0;
 
-      if (Button_C_press()) {
-        printText("\nCurrent Block: ");
-        printNumbers(Pinch_currentBlock(), DEC);
-        printText("\nCurrent Sector: ");
-        printNumbers(Pinch_currentSector(), DEC);
-      } else if (Button_A_press()) {
-        Pinch_nextBlock();
-      } else if (Button_B_press()) {
-        Pinch_nextSector();
-      }
+    // }
 
 
-
-      Display_setDigit(Pinch_currentBlock()+65, 0);
-      Display_setDigit(Pinch_currentSector() < 10 ? '0' : '1', 1);
-      Display_setDigit((Pinch_currentSector() % 10) + 48, 2);
-
-      lastTimeMillis = 0;
-    }
+  if (currentMillis >= 150) {
     
 
-    Pinch_loop();
-    Display_update();
+    if (Button_C_press()) {
+      printText("\nCurrent Block: ");
+      printNumbers(Pinch_currentBlock(), DEC);
+      printText("\nCurrent Sector: ");
+      printNumbers(Pinch_currentSector(), DEC);
+    } else if (Button_A_press()) {
+      Pinch_nextBlock();
+    } else if (Button_B_press()) {
+      Pinch_nextSector();
+    }
 
-    lastTimeMillis+=4;
+
+
+    Display_setDigit(Pinch_currentBlock()+65, 0);
+    Display_setDigit(Pinch_currentSector() < 10 ? '0' : '1', 1);
+    Display_setDigit((Pinch_currentSector() % 10) + 48, 2);
+
+    currentMillis = 0;
   }
+  
+
+  Pinch_loop();
+  Display_update();
+
 }
 
 void main()
 {
 
   setup();
-  loop();
+
+  while (1)
+  {
+    loop();
+  
+    currentMillis+=4;
+  }
+ 
 }

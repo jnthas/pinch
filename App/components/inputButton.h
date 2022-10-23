@@ -2,10 +2,6 @@
 #define INPUT_BUTTON_H
 
 #include <stdbool.h>
-#include <stdint.h>
-#include "ch552.h"
-#include "debug.h"
-#include "spi.h"
 #include "../core/GPIO.h"
 
 

@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "ch552.h"
-#include "ch554_usb.h"
 #include "USBconstant.h"
 #include "USBhandler.h"
 

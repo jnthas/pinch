@@ -9,7 +9,6 @@
 
 #include <stdint.h>
 #include "ch552.h"
-#include "ch554_usb.h"
 
 
 #define  SET_LINE_CODING                0X20            // Configures DTE rate, stop-bits, parity, and number-of-uint8_tacter

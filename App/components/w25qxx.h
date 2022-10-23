@@ -31,9 +31,11 @@
                                               // Example for Winbond 4Mbit W25X40CL: 0xEF30 (page 14: http://www.winbond.com/NR/rdonlyres/6E25084C-0BFE-4B25-903D-AE10221A0929/0/W25X40CL.pdf)
 #define SPIFLASH_MACREAD          0x4B        // read unique ID number (MAC)
 
+#define BUFFER_SIZE 32
+
 
 static __xdata uint8_t UNIQUEID[8] = {0};
-static __xdata uint8_t _sbuffer[32];
+static __xdata uint8_t _sbuffer[BUFFER_SIZE];
 
 
 /* Hardware interface definition */
@@ -46,20 +48,18 @@ Use CH554 hardware SPI interface
          P1.7        <==>       SCK
 *******************************************************************************/
 
-uint8_t readByte(uint32_t addr);
-uint16_t readDeviceId(void);
+uint8_t readByte(__xdata uint32_t addr);
+__xdata uint16_t readDeviceId(void);
 void  SPISetup(void);
 uint8_t* readUniqueId();
-void readBytes(uint32_t addr, void* buf, uint16_t len);
+void readBytes(__xdata uint32_t addr, void* buf, __xdata uint16_t len);
 bool busy();
 uint8_t readStatus();
 void enableWrite();
-void writeByte(uint32_t addr, uint8_t byt);
-void writeBytes(uint32_t addr, const void* buf, uint16_t len);
+void writeByte(__xdata uint32_t addr, uint8_t byt);
+void writeBytes(__xdata uint32_t addr, const void* buf, __xdata uint16_t len);
 void chipErase();
-void blockErase4K(uint32_t addr);
-void blockErase32K(uint32_t addr);
-void blockErase64K(uint32_t addr);
+void blockErase4K(__xdata uint32_t addr);
 void sleep();
 void wakeup();
 

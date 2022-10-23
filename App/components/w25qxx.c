@@ -59,7 +59,7 @@ uint8_t *readUniqueId()
   return UNIQUEID;
 }
 
-uint8_t readByte(uint32_t addr)
+uint8_t readByte(__xdata uint32_t addr)
 {
   sendCommand(SPIFLASH_ARRAYREADLOWFREQ);
   CH554SPIMasterWrite(addr >> 16);
@@ -75,7 +75,7 @@ uint8_t readByte(uint32_t addr)
 }
 
 /// read unlimited # of bytes
-void readBytes(uint32_t addr, void *buf, uint16_t len)
+void readBytes(__xdata uint32_t addr, void *buf, __xdata uint16_t len)
 {
   sendCommand(SPIFLASH_ARRAYREAD);
   CH554SPIMasterWrite(addr >> 16);
@@ -109,7 +109,7 @@ void enableWrite()
   unselect();
 }
 
-void writeByte(uint32_t addr, uint8_t byt)
+void writeByte(__xdata uint32_t addr, uint8_t byt)
 {
   enableWrite();
   sendCommand(SPIFLASH_BYTEPAGEPROGRAM);
@@ -126,7 +126,7 @@ void writeByte(uint32_t addr, uint8_t byt)
 ///          use the block erase commands to first clear memory (write 0xFFs)
 /// This version handles both page alignment and data blocks larger than 256 bytes.
 ///
-void writeBytes(uint32_t addr, const void* buf, uint16_t len) {
+void writeBytes(__xdata uint32_t addr, const void* buf, __xdata uint16_t len) {
   uint16_t n;
   uint16_t maxBytes = 256-(addr%256);  // force the first set of bytes to stay within the first page
   uint16_t offset = 0;
@@ -163,7 +163,7 @@ void chipErase() {
 }
 
 /// erase a 4Kbyte block
-void blockErase4K(uint32_t addr) {
+void blockErase4K(__xdata uint32_t addr) {
   enableWrite();
   sendCommand(SPIFLASH_BLOCKERASE_4K);
   CH554SPIMasterWrite(addr >> 16);
@@ -172,25 +172,6 @@ void blockErase4K(uint32_t addr) {
   unselect();
 }
 
-/// erase a 32Kbyte block
-void blockErase32K(uint32_t addr) {
-  enableWrite();
-  sendCommand(SPIFLASH_BLOCKERASE_32K);
-  CH554SPIMasterWrite(addr >> 16);
-  CH554SPIMasterWrite(addr >> 8);
-  CH554SPIMasterWrite(addr);
-  unselect();
-}
-
-/// erase a 64Kbyte block
-void blockErase64K(uint32_t addr) {
-  enableWrite();
-  sendCommand(SPIFLASH_BLOCKERASE_64K);
-  CH554SPIMasterWrite(addr >> 16);
-  CH554SPIMasterWrite(addr >> 8);
-  CH554SPIMasterWrite(addr);
-  unselect();
-}
 
 /// Put flash memory chip into power down mode
 /// WARNING: after this command, only the WAKEUP and DEVICE_ID commands are recognized

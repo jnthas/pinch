@@ -9,7 +9,7 @@
 
 __xdata char display_buffer[3] = {0,0,0};
 
-__xdata const uint8_t DisplayChars[CHAR_ARR_SIZE][2] = {
+__code const uint8_t DisplayChars[CHAR_ARR_SIZE][2] = {
     {0b00000000,' '},
     {0b00111111,'0'},
     {0b00000110,'1'},
@@ -51,7 +51,7 @@ void Display_setup()
 }
 
 
-void Display_setDigit(__xdata char digit, __xdata uint8_t pos) {
+void Display_setDigit(char digit, uint8_t pos) {
 
     display_buffer[pos] = DisplayChars[0][0];
         
@@ -68,7 +68,7 @@ void Display_toggleOff() {
     digitalWrite(DIGIT_3_PIN, HIGH);
 }
 
-void Display_toggleOn(__xdata uint8_t pin) {
+void Display_toggleOn(uint8_t pin) {
     
     if (pin == DIGIT_2_PIN) {
         digitalWrite(DIGIT_1_PIN, HIGH);
@@ -122,9 +122,6 @@ void Display_update() {
     
 
     Display_toggleOn(DIGIT_3_PIN);
-
-    
-    
 }
 
 void Display_clear() {
@@ -139,7 +136,7 @@ void Display_printNumber(__xdata int number) {
     sprintf(numchar, "%d", number);
 
     if (number < 10) {
-        Display_setDigit(number, 2);
+        Display_setDigit(numchar[0], 2);
     } else if (number < 100) {
         Display_setDigit(numchar[1], 2);
         Display_setDigit(numchar[0], 1);
@@ -153,7 +150,7 @@ void Display_printNumber(__xdata int number) {
 }
 
 
-void Display_marquee(const char* text, __xdata uint8_t size, uint8_t* currentPos)
+void Display_marquee(const char* text, uint8_t size, uint8_t* currentPos)
 {
     if ((*currentPos) >= size)
         (*currentPos) = 0;
@@ -204,7 +201,7 @@ void Display_loading(uint8_t* currentPos) {
 }
 
 
-void Display_setLed(__xdata bool state)
+void Display_setLed(bool state)
 {
     ledState = state;
 }

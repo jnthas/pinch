@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include "ch552.h"
-#include "ch554_usb.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -102,8 +102,6 @@ _deps
 *.asm
 *.ihx 
 *.lk
-*.bin
-*.hex 
 
 build/
 

@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include "ch552.h"
-#include "ch554_usb.h"
 #include "USBconstant.h"
 
 extern __xdata uint8_t  Ep0Buffer[];
