@@ -13,6 +13,18 @@
 ERASE: echo -e "\x11\x7f\x01\x01\x01\x1e\x04" > /dev/ttyACM0
 STORE: echo -e "\x11\x0c\x01\x041234\x1e\x02\x0ewww.google.com\x1e\x03\x00my super strong passssword\x10\x1e\x04" > /dev/ttyACM0 
 LOAD : echo -e "\x11\x05\x01\x01\x01\x1e\x04" > /dev/ttyACM0
+
+echo -e "\x11\x0c\x00\x0A1666575017\x1e\x01\x0dwww.yahoo.com\x1e\x02\x00d8e8fca2dc0f896fd7cb4cb0031ba249\x10\x1e\x04" > /dev/ttyACM0 
+
+\x11\x0c
+\x01\x04 1234 \x1e
+\x02\x0e www.google.com \x1e
+\x03\x00 my super strong passssword\x10 \x1e
+
+
+\x04
+
+
 */
 
 

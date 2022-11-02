@@ -10,7 +10,6 @@ struct ProtocolStructure
 
 enum ProtocolState
 {
-
   begin_of_transmission,
   operation,
   parameter,
@@ -27,7 +26,7 @@ __xdata uint8_t _currentSector = 0;
 
 __xdata uint8_t cmdByte;
 __xdata uint8_t lastCmdByte;
-__xdata long byteCount = 0;
+__xdata uint16_t byteCount = 0;
 
 void Pinch_setup()
 {
@@ -156,21 +155,18 @@ void Pinch_store(__xdata uint8_t payload)
 {
   __xdata uint32_t memAddress;
 
-  memset(_sbuffer, 0, FLASH_BUFFER_SIZE * sizeof(*_sbuffer));
+  ///memset(_sbuffer, 0, FLASH_BUFFER_SIZE * sizeof(*_sbuffer));
 
+  memAddress = Pinch_getMemAddress(_currentBlock, _currentSector, protocol.param);
+
+  // Header, two bytes. Param code and param size
   if (byteCount <= 1)
   {
-    memAddress = Pinch_getMemAddress(_currentBlock, protocol.param - 1, 0);
     writeByte(memAddress, protocol.param);
-
-    memAddress = Pinch_getMemAddress(_currentBlock, protocol.param - 1, 1);
-    writeByte(memAddress, protocol.payload_size);
-
-    /// USBSerial_println("Payload: ");
+    writeByte(memAddress+1, protocol.payload_size);
   }
 
-  memAddress = Pinch_getMemAddress(_currentBlock, protocol.param - 1, byteCount + 1);
-  writeByte(memAddress, payload);
+  writeByte(memAddress + byteCount + 1, payload);
 
   mDelaymS(1);
 
@@ -189,46 +185,45 @@ void Pinch_load(__xdata uint8_t payload)
   __xdata uint32_t memAddress = Pinch_getMemAddress(_currentBlock, _currentSector, payload);
   __xdata uint8_t regCount = 0;
 
-  printText("Addr: ");
-  printNumbers(memAddress, HEX);
+  //printText("Addr: ");
+  //printNumbers(memAddress, HEX);
   // printText("-");
   // printNumbers(memAddress+255, HEX);
   // printText(":");
-  printLineBreak();
+  //printLineBreak();
 
   for (uint8_t j = 0; j < (256 / FLASH_BUFFER_SIZE); j++)
   {
 
     readBytes(memAddress + (j * FLASH_BUFFER_SIZE), _sbuffer, FLASH_BUFFER_SIZE);
 
-    printText("_sbuffer:\n");
+    //printText("_sbuffer:\n");
     for (regCount = 0; regCount < FLASH_BUFFER_SIZE; regCount++)
     {
-      printNumbers(_sbuffer[regCount], HEX);
+      //printNumbers(_sbuffer[regCount], HEX);
 
       if (_sbuffer[regCount] == 0xff || _sbuffer[regCount] == PINCH_DLE)
         break;
     }
     
-    printLineBreak(); 
-    printText("Break RegCount: ");
-    printNumbers(regCount, DEC);
-    printLineBreak();
+    //printLineBreak(); 
+    //printText("Break RegCount: ");
+    //printNumbers(regCount, DEC);
+    //printLineBreak();
 
     if (regCount < 1)
       break;
   
 
-
     if (j == 0)
     {
       // skips the first two bytes, param number and param size
-      printText("J=0:\n");
+      //printText("J=0:\n");
       printTextArray(2 + _sbuffer, regCount - 2);
     }
     else
     {
-      printText("J>0:\n");
+      //printText("J>0:\n");
       printTextArray(_sbuffer, regCount);
     }
 
@@ -237,33 +232,29 @@ void Pinch_load(__xdata uint8_t payload)
   }
 
   printLineBreak();
-
 }
 
 void Pinch_handler(__xdata uint8_t payload)
 {
-  uint32_t memAddress;
+
   switch (protocol.operation)
   {
-
-  case PINCH_STORE:
-    Pinch_store(payload);
-    break;
-  case PINCH_LOAD:
-    //TODO: check limits of payload
-    Pinch_load(payload);
-    break;
-  case PINCH_ERASE:
-    //printText("Erase\n");
-    
-
-    memAddress = Pinch_getMemAddress(0xc8, 0xff, 0xc9);
-    printNumbers(memAddress, HEX);
-    printLineBreak();
-    mDelaymS(1000);
-    break;
-  default:
-    break;
+    case PINCH_STORE:
+      Pinch_store(payload);
+      break;
+    case PINCH_LOAD:
+      //TODO: check limits of payload
+      Pinch_load(payload);
+      break;
+    case PINCH_ERASE:
+      //printText("Erase\n");
+      //memAddress = Pinch_getMemAddress(0xc8, 0xff, 0xc9);
+      //printNumbers(memAddress, HEX);
+      printLineBreak();
+      mDelaymS(1000);
+      break;
+    default:
+      break;
   }
 }
 
@@ -282,7 +273,6 @@ void Pinch_nextSector()
   if (_currentSector > 15)
     _currentSector = 0;
 }
-
 
 uint8_t Pinch_currentBlock()
 {
