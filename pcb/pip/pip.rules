@@ -1,0 +1,79 @@
+
+(rules PCB pip
+  (snap_angle 
+    fortyfive_degree
+  )
+  (autoroute_settings
+    (fanout off)
+    (autoroute on)
+    (postroute on)
+    (vias on)
+    (via_costs 50)
+    (plane_via_costs 5)
+    (start_ripup_costs 100)
+    (start_pass_no 212)
+    (layer_rule F.Cu
+      (active on)
+      (preferred_direction horizontal)
+      (preferred_direction_trace_costs 1.0)
+      (against_preferred_direction_trace_costs 2.8)
+    )
+    (layer_rule B.Cu
+      (active on)
+      (preferred_direction vertical)
+      (preferred_direction_trace_costs 1.0)
+      (against_preferred_direction_trace_costs 1.6)
+    )
+  )
+  (rule
+    (width 250.0)
+    (clear 200.0)
+    (clear 125.0 (type smd_to_turn_gap))
+  )
+  (padstack "Via[0-1]_800:400_um"
+    (shape
+      (circle F.Cu 800.0 0.0 0.0)
+    )
+    (shape
+      (circle B.Cu 800.0 0.0 0.0)
+    )
+    (attach off)
+  )
+  (via 
+    "Via[0-1]_800:400_um" "Via[0-1]_800:400_um" default
+  )
+  (via 
+    "Via[0-1]_800:400_um-kicad_default" "Via[0-1]_800:400_um" "kicad_default"
+  )
+  (via_rule
+    default "Via[0-1]_800:400_um"
+  )
+  (via_rule
+    "kicad_default" "Via[0-1]_800:400_um-kicad_default"
+  )
+  (class default
+    VCC GND VBUS RESET "Net-(D1-Pad1)" P3.6 "Net-(Q1-Pad1)" "Net-(R1-Pad1)"
+    "Net-(DS1-Pad7)" "Net-(R2-Pad1)" "Net-(DS1-Pad9)" "Net-(R3-Pad1)" "Net-(DS1-Pad2)" "Net-(R4-Pad1)" "Net-(DS1-Pad3)" "Net-(R5-Pad1)"
+    "Net-(DS1-Pad4)" "Net-(R6-Pad1)" "Net-(DS1-Pad1)" "Net-(R7-Pad1)" "Net-(DS1-Pad5)" "Net-(R8-Pad1)" "Net-(R9-Pad2)" "Net-(R10-Pad2)"
+    P1.4 P1.1 P3.2 "unconnected-(U1-Pad9)" P1.7 P3.3 P1.5 P1.6
+    P3.1 P3.0 P3.4 P3.7
+    (clearance_class default)
+    (via_rule default)
+    (rule
+      (width 250.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class "kicad_default"
+    (clearance_class "kicad_default")
+    (via_rule "kicad_default")
+    (rule
+      (width 250.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+)
