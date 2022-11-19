@@ -1,4 +1,4 @@
-6674564664188
+8343799507200
 libraries
 Display_2531AB
 Through hole straight socket strip, 2x05, 2.54mm pitch, double cols (from Kicad 4.0.7), script generated
@@ -6,6 +6,13 @@ Through hole socket strip THT 2x05 2.54mm double row
 0
 10
 10
+libraries
+Logo
+
+
+0
+0
+0
 libraries
 SW_Push_45x45mm_H1.5mm
 tactile push button, 6x6mm e.g. PTS645xx series, height=9.5mm
