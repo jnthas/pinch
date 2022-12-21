@@ -8,7 +8,7 @@ XRAM_SIZE = 0x0400
 XRAM_LOC = 0x0400
 
 C_FILES = \
-	App/main.c \
+	App/test_display.c \
 	App/core/USBCDC.c \
 	App/core/USBconstant.c \
 	App/core/USBhandler.c \

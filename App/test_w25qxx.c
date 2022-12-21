@@ -9,10 +9,10 @@
 #include "core/USBCDC.h"
 #include "core/Print.h"
 #include "components/w25qxx.h"
+#include "components/sevenSegmentDisplay.h"
+#include "components/inputButton.h"
 
 
-#define LED_PIN 0
-SBIT(LED, 0xB0, LED_PIN);
 
 void USBInterrupt(void); //USBInterrupt does not need to saves the context
 
@@ -21,16 +21,14 @@ void DeviceUSBInterrupt(void) __interrupt (INT_NO_USB)                       //U
     USBInterrupt();
 }
 
+__xdata uint8_t displayPos = 0;
+__xdata unsigned long currentMillis = 0;
+
+
 void blink(uint8_t times) {
-
-    for (uint8_t i = 0; i<times; i++) {
-        LED = 1;
-        mDelaymS(250);
-        LED = 0;
-        mDelaymS(250);
-    }
-
-    mDelaymS(1000);
+    Display_setLed(true);
+    mDelaymS(500);
+    Display_setLed(false);
 }
 
 
@@ -134,43 +132,54 @@ void testChipErase() {
 }
 
 
+void setup()
+{
+  CfgFsys();
+  mDelaymS(10);
+
+  USBInit();
+  SPISetup();
+
+  Display_setup();
+  Button_setup();
+  Pinch_setup();
+}
+
+void pinchButtonEvent(ButtonState event) {
+
+    if (event == BUTTON_A_RELEASED)
+      testReadDeviceId();
+    else if (event == BUTTON_B_RELEASED)
+      testReadUniqueId();
+    else if (event == BUTTON_C_RELEASED)
+      testReadBytes();
+}
+
+void loop()
+{
+
+  if (currentMillis >= 100) {
+    Display_setDigit('1', 2);
+    currentMillis = 0;
+  }
+
+
+
+  Pinch_loop();
+  Display_update();
+  Button_loop(&pinchButtonEvent);
+}
+
 void main()
 {
-    CfgFsys(); 
-    mDelaymS(10);
 
-    USBInit();
-    USBSerial();
-    SPISetup();
+  setup();
 
-
-    //blink(3);
-
-    mDelaymS(1000);
-    
-    while(1) {
-
-
-        blink(3);
-        
-        testReadDeviceId();
-        //testReadUniqueId();
-        //testReadByte();
-        //testReadBytes();
-        //testReadStatus();
-
-
-        //testReadBytes();
-        //testChipErase();
-        //testReadBytes();
-
-
-
-        mDelaymS(2000);
-
-    }
-
-    
-
-
+  while (1)
+  {
+    loop();
+  
+    currentMillis+=4;
+  }
+ 
 }
