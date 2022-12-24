@@ -17,6 +17,19 @@ void Button_setup() {
     p1Mode(1, INPUT);
 }
 
+uint8_t Button_startupCheck() {
+    bool buttonAstate = analogRead(BUTTON_A) > HIGH_THRESHOLD;
+    bool buttonBstate = analogRead(BUTTON_B) > HIGH_THRESHOLD;
+
+    if (buttonAstate && buttonBstate)
+        return BUTTON_C_PRESSED;
+    else if (buttonAstate) 
+        return BUTTON_A_PRESSED;
+    else if (buttonBstate)
+        return BUTTON_B_PRESSED;
+    
+    return NO_BUTTON;
+}
 
 void Button_loop(ButtonEvent buttonEvent) {
 

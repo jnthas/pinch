@@ -11,6 +11,10 @@
 void Display_setup();
 
 void Display_setDigit(char digit, uint8_t pos);
+char Display_getDigit(uint8_t pos);
+void Display_fill(char digit);
+
+
 void Display_toggleOff();
 void Display_toggleOn(uint8_t pin);
 

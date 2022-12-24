@@ -33,7 +33,24 @@ void Pinch_setup()
   current_state = begin_of_transmission;
 }
 
-void Pinch_loop()
+
+void Pinch_loop(__xdata unsigned long currentMillis) {
+  if (currentMillis % 100 == 0)
+  {
+
+    Display_setDigit(Pinch_currentBlock()+65, 0);
+    Display_setDigit(Pinch_currentSector() < 10 ? '0' : '1', 1);
+    Display_setDigit((Pinch_currentSector() % 10) + 48, 2);
+
+  }
+    
+  Button_loop(&Pinch_handleInputButton);
+
+  Pinch_ProtocolLoop();
+}
+
+
+void Pinch_ProtocolLoop()
 {
   if (USBSerial_available() > 0)
   {
@@ -282,4 +299,17 @@ uint8_t Pinch_currentBlock()
 uint8_t Pinch_currentSector()
 {
   return _currentSector;
+}
+
+void Pinch_handleInputButton(ButtonState event) {
+
+    if (event == BUTTON_A_RELEASED)
+      Pinch_nextBlock();
+    else if (event == BUTTON_B_RELEASED)
+      Pinch_nextSector();
+    else if (event == BUTTON_C_RELEASED) {
+      Pinch_load(0); 
+      Pinch_load(1); 
+      Pinch_load(2); 
+    }
 }

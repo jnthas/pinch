@@ -6,6 +6,8 @@
 
 #include "../core/Print.h"
 #include "../core/USBCDC.h"
+#include "../components/sevenSegmentDisplay.h"
+#include "../components/inputButton.h"
 #include "../components/w25qxx.h"
 
 
@@ -40,7 +42,7 @@ echo -e "\x11\x0c\x00\x0A1666575017\x1e\x01\x0dwww.yahoo.com\x1e\x02\x00d8e8fca2
 
 
 void Pinch_setup();
-void Pinch_loop();
+void Pinch_loop(__xdata unsigned long currentMillis);
 
 uint32_t Pinch_getMemAddress(__xdata uint8_t block, __xdata uint8_t sector, __xdata uint8_t page);
 void Pinch_store(__xdata uint8_t payload);
@@ -52,6 +54,9 @@ void Pinch_nextSector();
 
 uint8_t Pinch_currentBlock();
 uint8_t Pinch_currentSector();
+
+void Pinch_handleInputButton(ButtonState event);
+void Pinch_ProtocolLoop();
 
 
 #endif

@@ -53,15 +53,29 @@ void Display_setup()
 }
 
 
-void Display_setDigit(char digit, uint8_t pos) {
-
-    display_buffer[pos] = DisplayChars[0][0];
-        
+uint8_t find_char(char digit) {
     for (uint8_t b = 0; b<CHAR_ARR_SIZE; b++) 
     {
         if (DisplayChars[b][1] == digit)
-            display_buffer[pos] = DisplayChars[b][0];
+            return DisplayChars[b][0];
     }
+
+    return DisplayChars[0][0];
+}
+
+void Display_setDigit(char digit, uint8_t pos) {
+    display_buffer[pos] = find_char(digit);
+}
+
+char Display_getDigit(uint8_t pos) {
+    return display_buffer[pos];
+}
+
+void Display_fill(char digit) {
+    uint8_t char_temp = find_char(digit);
+    display_buffer[0] = char_temp;
+    display_buffer[1] = char_temp;
+    display_buffer[2] = char_temp;
 }
 
 void Display_toggleOff() {

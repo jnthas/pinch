@@ -12,7 +12,8 @@ typedef enum ButtonStateEnum
   BUTTON_C_PRESSED,
   BUTTON_A_RELEASED,
   BUTTON_B_RELEASED,
-  BUTTON_C_RELEASED
+  BUTTON_C_RELEASED,
+  NO_BUTTON
 } ButtonState;
 
 
@@ -21,5 +22,6 @@ typedef void (*ButtonEvent)(ButtonState);
 
 void Button_setup();
 void Button_loop(ButtonEvent buttonEvent);
+uint8_t Button_startupCheck();
 
 #endif

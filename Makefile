@@ -8,7 +8,7 @@ XRAM_SIZE = 0x0400
 XRAM_LOC = 0x0400
 
 C_FILES = \
-	App/test_display.c \
+	App/main.c \
 	App/core/USBCDC.c \
 	App/core/USBconstant.c \
 	App/core/USBhandler.c \
@@ -18,6 +18,7 @@ C_FILES = \
 	App/components/sevenSegmentDisplay.c \
 	App/components/inputButton.c \
 	App/app/pinch.c \
+	App/app/locker.c \
 	include/debug.c \
 	include/spi.c
 
