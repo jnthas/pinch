@@ -3,7 +3,7 @@
 
 
 #include <stdint.h>
-#include "USBCDC.h"
+#include "cdc/USBCDC.h"
 
 #define DEC 10
 #define HEX 16

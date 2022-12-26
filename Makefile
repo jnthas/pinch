@@ -8,16 +8,15 @@ XRAM_SIZE = 0x0400
 XRAM_LOC = 0x0400
 
 C_FILES = \
-	App/main.c \
-	App/core/USBCDC.c \
-	App/core/USBconstant.c \
-	App/core/USBhandler.c \
-	App/core/Print.c \
+	App/test_keyboard.c \
+	App/core/hid/USBHIDKeyboard.c \
+	App/core/hid/USBconstant.c \
+	App/core/hid/USBhandler.c \
+	App/core/USBDefinition.c \
 	App/core/GPIO.c \
 	App/components/w25qxx.c \
 	App/components/sevenSegmentDisplay.c \
 	App/components/inputButton.c \
-	App/app/pinch.c \
 	App/app/locker.c \
 	include/debug.c \
 	include/spi.c

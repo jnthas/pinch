@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "../core/Print.h"
-#include "../core/USBCDC.h"
+#include "../core/cdc/USBCDC.h"
 #include "../components/sevenSegmentDisplay.h"
 #include "../components/inputButton.h"
 #include "../components/w25qxx.h"
