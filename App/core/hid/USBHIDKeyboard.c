@@ -149,9 +149,10 @@ void mDelayuS(uint16_t us);
 
 
 void Keyboard_setup(){
-    USBDeviceCfg();                                                       //Device mode configuration
-    USBDeviceEndPointCfg();                                               //Endpoint configuration   
-    USBDeviceIntCfg();                                                    //Interrupt configuration    
+	USBHandler_asHID();
+    USBHandler_usbDeviceCfg();                                                       //Device mode configuration
+    USBHandler_usbDeviceEndpointCfg();                                               //Endpoint configuration   
+    USBHandler_usbDeviceIntCfg();                                                    //Interrupt configuration    
     UEP0_T_LEN = 0;
     UEP1_T_LEN = 0;                                                       //Pre-use send length must be cleared	  
     UEP2_T_LEN = 0;                                                          

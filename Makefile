@@ -9,10 +9,10 @@ XRAM_LOC = 0x0400
 
 C_FILES = \
 	App/test_keyboard.c \
+	App/core/USBHandler.c \
 	App/core/hid/USBHIDKeyboard.c \
+	App/core/hid/USBHandlerHID.c \
 	App/core/hid/USBconstant.c \
-	App/core/hid/USBhandler.c \
-	App/core/USBDefinition.c \
 	App/core/GPIO.c \
 	App/components/w25qxx.c \
 	App/components/sevenSegmentDisplay.c \

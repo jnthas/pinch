@@ -4,8 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "ch552.h"
-#include "USBconstant.h"
-#include "USBhandler.h"
+#include "../USBHandler.h"
 
 
 #define KEY_LEFT_CTRL   0x80
@@ -57,23 +56,13 @@
 #define KEY_F23       0xFA
 #define KEY_F24       0xFB
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void Keyboard_setup(void);
-
 uint8_t Keyboard_press(uint8_t k);
 uint8_t Keyboard_release(uint8_t k);
 void Keyboard_releaseAll(void);
-
 uint8_t Keyboard_write(uint8_t c);
-
 uint8_t Keyboard_getLEDStatus();
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif
 

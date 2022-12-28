@@ -9,7 +9,6 @@
 #include "components/w25qxx.h"
 #include "components/sevenSegmentDisplay.h"
 #include "components/inputButton.h"
-#include "core/USBDefinition.h"
 
 
 __xdata uint8_t displayPos = 0;
@@ -20,7 +19,7 @@ void USBInterrupt(void); // USBInterrupt does not need to saves the context
 
 void DeviceUSBInterrupt(void) __interrupt(INT_NO_USB) // USB interrupt service
 {
-  USBInterrupt();
+  HIDUSBInterrupt();
 }
 
 
@@ -31,7 +30,7 @@ void setup()
 
   Keyboard_setup();
 
-  USB_setCDCMode();
+  //USB_setCDCMode();
   
   SPISetup();
 
@@ -45,16 +44,17 @@ void pinchButtonEvent(ButtonState event)
   if (event == BUTTON_A_RELEASED)
   {
     
-    Keyboard_write(PinchMode[0]);
-    Keyboard_write(PinchMode[1]);
-    Keyboard_write(PinchMode[2]);
+    Keyboard_write('A');
+    Keyboard_write('B');
+    Keyboard_write('C');
 
   }
   else if (event == BUTTON_B_PRESSED)
   {
-    Display_setDigit(' ', 0);
-    Display_setDigit(' ', 1);
-    Display_setDigit('2', 2);
+    Keyboard_write('T');
+    Keyboard_write('E');
+    Keyboard_write('S');
+    Keyboard_write('T');
   }
   else if (event == BUTTON_C_PRESSED)
   {

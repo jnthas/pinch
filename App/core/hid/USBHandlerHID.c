@@ -1,18 +1,10 @@
-#include "USBhandler.h"
-
-#include "USBconstant.h"
+#include "USBHandlerHID.h"
 
 //Keyboard functions:
-
-void USB_EP2_IN();
-void USB_EP2_OUT();
 
 __xdata __at (EP0_ADDR) uint8_t  Ep0Buffer[8];     
 __xdata __at (EP1_ADDR) uint8_t  Ep1Buffer[128];       //on page 47 of data sheet, the receive buffer need to be min(possible packet size+2,64), IN and OUT buffer, must be even address
 
-#if (EP1_ADDR+128) > USER_USB_RAM
-#error "This example needs more USB ram. Increase this setting in menu."
-#endif
 
 uint16_t SetupLen;
 uint8_t SetupReq,UsbConfig;
@@ -20,8 +12,6 @@ uint8_t SetupReq,UsbConfig;
 __code uint8_t *pDescr;
 
 volatile uint8_t usbMsgFlags=0;    // uint8_t usbMsgFlags copied from VUSB
-
-inline void NOP_Process(void) {}
 
 void USB_EP0_SETUP(){
     uint8_t len = USB_RX_LEN;
@@ -356,7 +346,7 @@ void USB_EP0_OUT(){
 
 #pragma save
 #pragma nooverlay
-void USBInterrupt(void) {   //inline not really working in multiple files in SDCC
+void HIDUSBInterrupt(void) {   //inline not really working in multiple files in SDCC
     if(UIF_TRANSFER) {
         // Dispatch to service functions
         uint8_t callIndex=USB_INT_ST & MASK_UIS_ENDP;
@@ -364,23 +354,8 @@ void USBInterrupt(void) {   //inline not really working in multiple files in SDC
             case UIS_TOKEN_OUT:
             {//SDCC will take IRAM if array of function pointer is used.
                 switch (callIndex) {
-                    case 0: EP0_OUT_Callback(); break;
-                    case 1: EP1_OUT_Callback(); break;
-                    case 2: EP2_OUT_Callback(); break;
-                    case 3: EP3_OUT_Callback(); break;
-                    case 4: EP4_OUT_Callback(); break;
-                    default: break;
-                }
-            }
-                break;
-            case UIS_TOKEN_SOF:
-            {//SDCC will take IRAM if array of function pointer is used.
-                switch (callIndex) {
-                    case 0: EP0_SOF_Callback(); break;
-                    case 1: EP1_SOF_Callback(); break;
-                    case 2: EP2_SOF_Callback(); break;
-                    case 3: EP3_SOF_Callback(); break;
-                    case 4: EP4_SOF_Callback(); break;
+                    case 0: USB_EP0_OUT(); break;
+                    case 1: USB_EP1_OUT(); break;
                     default: break;
                 }
             }
@@ -388,11 +363,8 @@ void USBInterrupt(void) {   //inline not really working in multiple files in SDC
             case UIS_TOKEN_IN:
             {//SDCC will take IRAM if array of function pointer is used.
                 switch (callIndex) {
-                    case 0: EP0_IN_Callback(); break;
-                    case 1: EP1_IN_Callback(); break;
-                    case 2: EP2_IN_Callback(); break;
-                    case 3: EP3_IN_Callback(); break;
-                    case 4: EP4_IN_Callback(); break;
+                    case 0: USB_EP0_IN(); break;
+                    case 1: USB_EP1_IN(); break;
                     default: break;
                 }
             }
@@ -400,11 +372,7 @@ void USBInterrupt(void) {   //inline not really working in multiple files in SDC
             case UIS_TOKEN_SETUP:
             {//SDCC will take IRAM if array of function pointer is used.
                 switch (callIndex) {
-                    case 0: EP0_SETUP_Callback(); break;
-                    case 1: EP1_SETUP_Callback(); break;
-                    case 2: EP2_SETUP_Callback(); break;
-                    case 3: EP3_SETUP_Callback(); break;
-                    case 4: EP4_SETUP_Callback(); break;
+                    case 0: USB_EP0_SETUP(); break;
                     default: break;
                 }
             }
@@ -446,7 +414,7 @@ void USBInterrupt(void) {   //inline not really working in multiple files in SDC
 }
 #pragma restore
 
-void USBDeviceCfg()
+void HIDUSBDeviceCfg(void)
 {
     USB_CTRL = 0x00;                                                           //Clear USB control register
     USB_CTRL &= ~bUC_HOST_MODE;                                                //This bit is the device selection mode
@@ -465,7 +433,7 @@ void USBDeviceCfg()
     UDEV_CTRL |= bUD_PORT_EN;                                                  //Enable physical port
 }
 
-void USBDeviceIntCfg()
+void HIDUSBDeviceIntCfg(void)
 {
     USB_INT_EN |= bUIE_SUSPEND;                                               //Enable device hang interrupt
     USB_INT_EN |= bUIE_TRANSFER;                                              //Enable USB transfer completion interrupt
@@ -475,7 +443,7 @@ void USBDeviceIntCfg()
     EA = 1;                                                                   //Enable global interrupts
 }
 
-void USBDeviceEndPointCfg()
+void HIDUSBDeviceEndPointCfg(void)
 {
     UEP1_DMA = (uint16_t) Ep1Buffer;                                                      //Endpoint 1 data transfer address
     UEP1_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK | UEP_R_RES_ACK;        //Endpoint 2 automatically flips the sync flag, IN transaction returns NAK, OUT returns ACK
