@@ -4,8 +4,6 @@
 #include <stdint.h>
 
 typedef void (*USBInterruptStrategy)(void);
-typedef void (*USBDeviceCfgStrategy)(void);
-typedef void (*USBDeviceIntCfgStrategy)(void);
 typedef void (*USBDeviceEndPointCfgStrategy)(void);
 
 

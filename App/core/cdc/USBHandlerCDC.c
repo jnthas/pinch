@@ -313,51 +313,6 @@ void CDC_USB_EP0_SETUP(){
     }
 }
 
-//same
-void CDC_USB_EP0_IN(){
-    switch(SetupReq)
-    {
-        case USB_GET_DESCRIPTOR:
-        {
-            uint8_t len = SetupLen >= DEFAULT_ENDP0_SIZE ? DEFAULT_ENDP0_SIZE : SetupLen;                                 //send length
-            for (uint8_t i=0;i<len;i++){
-                EpABuffer[i] = pDescr[i];
-            }
-            //memcpy( EpABuffer, pDescr, len );                                  
-            SetupLen -= len;
-            pDescr += len;
-            UEP0_T_LEN = len;
-            UEP0_CTRL ^= bUEP_T_TOG;                    //Switch between DATA0 and DATA1
-        }
-            break;
-        case USB_SET_ADDRESS:
-            USB_DEV_AD = USB_DEV_AD & bUDA_GP_BIT | SetupLen;
-            UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
-            break;
-        default:
-            UEP0_T_LEN = 0;                                                      // End of transaction
-            UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
-            break;
-    }
-}
-
-//almost same
-void CDC_USB_EP0_OUT(){
-    if(SetupReq ==SET_LINE_CODING)  //Set line coding
-    {
-        if( U_TOG_OK )
-        {
-            setLineCodingHandler();
-            UEP0_T_LEN = 0;
-            UEP0_CTRL |= UEP_R_RES_ACK | UEP_T_RES_ACK;  // send 0-length packet
-        }
-    }
-    else
-    {
-        UEP0_T_LEN = 0;
-        UEP0_CTRL |= UEP_R_RES_ACK | UEP_T_RES_NAK;  //Respond Nak
-    }
-}
 
 
 void CDC_USB_EP1_IN(){
@@ -393,7 +348,7 @@ void CDCUSBInterrupt(void) {   //inline not really working in multiple files in 
             case UIS_TOKEN_OUT:
             {//SDCC will take IRAM if array of function pointer is used.
                 switch (callIndex) {
-                    case 0: CDC_USB_EP0_OUT(); break;
+                    case 0: USB_EP0_OUT(); break;
                     case 2: CDC_USB_EP2_OUT(); break;
                     default: break;
                 }
@@ -402,7 +357,7 @@ void CDCUSBInterrupt(void) {   //inline not really working in multiple files in 
             case UIS_TOKEN_IN:
             {//SDCC will take IRAM if array of function pointer is used.
                 switch (callIndex) {
-                    case 0: CDC_USB_EP0_IN(); break;
+                    case 0: USB_EP0_IN(); break;
                     case 1: CDC_USB_EP1_IN(); break;
                     case 2: CDC_USB_EP2_IN(); break;
                     default: break;
@@ -457,37 +412,6 @@ void CDCUSBInterrupt(void) {   //inline not really working in multiple files in 
     }
 }
 #pragma restore
-
-//same
-void CDCUSBDeviceCfg(void)
-{
-    USB_CTRL = 0x00;                                                           //Clear USB control register
-    USB_CTRL &= ~bUC_HOST_MODE;                                                //This bit is the device selection mode
-    USB_CTRL |=  bUC_DEV_PU_EN | bUC_INT_BUSY | bUC_DMA_EN;                    //USB device and internal pull-up enable, automatically return to NAK before interrupt flag is cleared during interrupt
-    USB_DEV_AD = 0x00;                                                         //Device address initialization
-    //     USB_CTRL |= bUC_LOW_SPEED;
-    //     UDEV_CTRL |= bUD_LOW_SPEED;                                                //Run for 1.5M
-    USB_CTRL &= ~bUC_LOW_SPEED;
-    UDEV_CTRL &= ~bUD_LOW_SPEED;                                             //Select full speed 12M mode, default mode
-#if defined(CH551) || defined(CH552) || defined(CH549)
-    UDEV_CTRL = bUD_PD_DIS;                                                     // Disable DP/DM pull-down resistor
-#endif
-#if defined(CH559)
-    UDEV_CTRL = bUD_DP_PD_DIS;                                                     // Disable DP/DM pull-down resistor
-#endif
-    UDEV_CTRL |= bUD_PORT_EN;                                                  //Enable physical port
-}
-
-//same
-void CDCUSBDeviceIntCfg(void)
-{
-    USB_INT_EN |= bUIE_SUSPEND;                                               //Enable device hang interrupt
-    USB_INT_EN |= bUIE_TRANSFER;                                              //Enable USB transfer completion interrupt
-    USB_INT_EN |= bUIE_BUS_RST;                                               //Enable device mode USB bus reset interrupt
-    USB_INT_FG |= 0x1F;                                                       //Clear interrupt flag
-    IE_USB = 1;                                                               //Enable USB interrupt
-    EA = 1;                                                                   //Enable global interrupts
-}
 
 void CDCUSBDeviceEndPointCfg(void)
 {

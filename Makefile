@@ -8,7 +8,7 @@ XRAM_SIZE = 0x0400
 XRAM_LOC = 0x0400
 
 C_FILES = \
-	App/main.c \
+	App/test_keyboard.c \
 	App/core/USBHandler.c \
 	App/core/hid/USBHIDKeyboard.c \
 	App/core/hid/USBHandlerHID.c \

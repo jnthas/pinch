@@ -17,8 +17,6 @@
 
 
 extern __xdata USBInterruptStrategy USBHandler_usbInterrupt;
-extern __xdata USBDeviceCfgStrategy USBHandler_usbDeviceCfg;
-extern __xdata USBDeviceIntCfgStrategy USBHandler_usbDeviceIntCfg;
 extern __xdata USBDeviceEndPointCfgStrategy USBHandler_usbDeviceEndpointCfg;
 
 
@@ -52,4 +50,7 @@ extern __code uint16_t Manuf_DesLen;
 void USBHandler_asHID();
 void USBHandler_asCDC();
 
+
+void USBDeviceCfg(void);
+void USBDeviceIntCfg(void);
 #endif

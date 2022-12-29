@@ -33,9 +33,9 @@ void setup()
   CfgFsys();
   mDelaymS(10);
 
-  //Keyboard_setup();
-  USBSerial_setup();
-  USBSerial();
+  Keyboard_setup();
+  //USBSerial_setup();
+  //USBSerial();
   
   SPISetup();
   Display_setup();
@@ -47,25 +47,13 @@ void pinchButtonEvent(ButtonState event)
   uint8_t buttonARead = analogRead(11);
   uint8_t buttonBRead = analogRead(32);
   if (event == BUTTON_A_RELEASED)
-  {
-    
-    
-  
-    printNumbers(buttonARead, DEC);
-    printLineBreak();
-    printNumbers(buttonBRead, DEC);
-    printText("---\n");
-
+  {  
+    Keyboard_write('A');
+    Keyboard_write('B');
+    Keyboard_write('C');
   }
   else if (event == BUTTON_B_RELEASED)
   {
-  
-    printNumbers(buttonARead, DEC);
-    printLineBreak();
-    printNumbers(buttonBRead, DEC);
-    printText("---\n");
-    
-
     Display_setDigit('C', 0);
     Display_setDigit('D', 1);
     Display_setDigit('C', 2);
