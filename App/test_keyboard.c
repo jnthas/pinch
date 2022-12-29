@@ -5,21 +5,26 @@
 #include <stdio.h>
 #include "ch552.h"
 #include "debug.h"
-#include "core/hid/USBHIDKeyboard.h"
 #include "components/w25qxx.h"
 #include "components/sevenSegmentDisplay.h"
 #include "components/inputButton.h"
+#include "core/USBHandler.h"
+#include "core/hid/USBHIDKeyboard.h"
+#include "core/cdc/USBCDC.h"
+#include "core/Print.h"
+#include "core/GPIO.h"
+
 
 
 __xdata uint8_t displayPos = 0;
 __xdata unsigned long currentMillis = 0;
 
 
-void USBInterrupt(void); // USBInterrupt does not need to saves the context
+//void USBInterrupt(void); // USBInterrupt does not need to saves the context
 
 void DeviceUSBInterrupt(void) __interrupt(INT_NO_USB) // USB interrupt service
 {
-  HIDUSBInterrupt();
+  USBHandler_usbInterrupt();
 }
 
 
@@ -28,20 +33,26 @@ void setup()
   CfgFsys();
   mDelaymS(10);
 
-  Keyboard_setup();
-
-  //USB_setCDCMode();
-  
-  SPISetup();
-
-  Display_setup();
   Button_setup();
+  
+  uint8_t currentButtonState = Button_startupCheck();
+  if (currentButtonState == BUTTON_A_PRESSED) {
+    // CDC Mode
+    USBSerial_setup();
+    USBSerial();
+  } else {
+    // KBD Mode (Default)
+    Keyboard_setup();
+  }   
+
+  SPISetup();
+  Display_setup();
 }
 
 void pinchButtonEvent(ButtonState event)
 {
 
-  if (event == BUTTON_A_RELEASED)
+  if (event == BUTTON_A_PRESSED)
   {
     
     Keyboard_write('A');
@@ -51,10 +62,15 @@ void pinchButtonEvent(ButtonState event)
   }
   else if (event == BUTTON_B_PRESSED)
   {
-    Keyboard_write('T');
-    Keyboard_write('E');
-    Keyboard_write('S');
-    Keyboard_write('T');
+    USBSerial_write('A');
+    USBSerial_write('B');
+    USBSerial_write('C');
+    USBSerial_write('D');
+    USBSerial_flush();
+
+    Display_setDigit('C', 0);
+    Display_setDigit('D', 1);
+    Display_setDigit('C', 2);
   }
   else if (event == BUTTON_C_PRESSED)
   {

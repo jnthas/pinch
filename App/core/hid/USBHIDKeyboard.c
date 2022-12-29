@@ -1,11 +1,5 @@
 #include "USBHIDKeyboard.h"
 
-
-extern __xdata __at (EP0_ADDR) uint8_t  Ep0Buffer[];
-extern __xdata __at (EP1_ADDR) uint8_t  Ep1Buffer[];
-
-volatile __xdata uint8_t UpPoint1_Busy  = 0;   //Flag of whether upload pointer is busy
-
 __xdata uint8_t HIDKey[8] = {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0};
 
 #define SHIFT 0x80
@@ -159,21 +153,6 @@ void Keyboard_setup(){
 }
 
 
-
-void USB_EP1_IN(){
-    UEP1_T_LEN = 0;
-    UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK;           // Default NAK
-    UpPoint1_Busy = 0;                                                  //Clear busy flag
-}
-
-
-void USB_EP1_OUT(){
-    if ( U_TOG_OK )                                                     // Discard unsynchronized packets
-    {
-
-    }
-}
-
 uint8_t USB_EP1_send(){
     uint16_t waitWriteCount = 0;
     
@@ -185,7 +164,7 @@ uint8_t USB_EP1_send(){
     }
     
     for (uint8_t i=0;i<sizeof(HIDKey);i++){                                  //load data for upload
-        Ep1Buffer[64+i] = HIDKey[i];
+        EpCBuffer[64+i] = HIDKey[i];
     }
                    
     UEP1_T_LEN = sizeof(HIDKey);                                             //data length
@@ -280,5 +259,5 @@ uint8_t Keyboard_write(uint8_t c){
 }
 
 uint8_t Keyboard_getLEDStatus(){
-    return Ep1Buffer[0];    //The only info we gets
+    return EpCBuffer[0];    //The only info we gets
 }

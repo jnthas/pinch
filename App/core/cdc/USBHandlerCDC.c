@@ -1,30 +1,19 @@
-#include "USBhandler.h"
+#include "USBHandlerCDC.h"
 
-#include "USBconstant.h"
 
 //CDC functions:
 void resetCDCParameters();
 void setLineCodingHandler();
 uint16_t getLineCodingHandler();
 void setControlLineStateHandler();
-void USB_EP2_IN();
-void USB_EP2_OUT();
-
-__xdata uint8_t  Ep0Buffer[8];     
-__xdata uint8_t  Ep1Buffer[8];       //on page 47 of data sheet, the receive buffer need to be min(possible packet size+2,64)
-__xdata uint8_t  Ep2Buffer[128];     //IN and OUT buffer, must be even address
 
 
-uint16_t SetupLen;
-uint8_t SetupReq,UsbConfig;
+volatile __xdata uint8_t UpPoint2_Busy  = 0;   //Flag of whether upload pointer is busy
+volatile __xdata uint8_t USBByteCountEP2 = 0;      //Bytes of received data on USB endpoint
+volatile __xdata uint8_t USBBufOutPointEP2 = 0;    //Data pointer for fetching
 
-__code uint8_t *pDescr;
 
-volatile uint8_t usbMsgFlags=0;    // uint8_t usbMsgFlags copied from VUSB
-
-inline void NOP_Process(void) {}
-
-void USB_EP0_SETUP(){
+void CDC_USB_EP0_SETUP(){
     uint8_t len = USB_RX_LEN;
     if(len == (sizeof(USB_SETUP_REQ)))
     {
@@ -83,12 +72,12 @@ void USB_EP0_SETUP(){
                     switch(UsbSetupBuf->wValueH)
                 {
                     case 1:                                                       //Device Descriptor
-                        pDescr = DevDesc;                                         //Put Device Descriptor into outgoing buffer
-                        len = DevDescLen;
+                        pDescr = CDCDevDesc;                                         //Put Device Descriptor into outgoing buffer
+                        len = CDCDevDescLen;
                         break;
                     case 2:                                                        //Configure Descriptor
-                        pDescr = CfgDesc;                                       
-                        len = CfgDescLen;
+                        pDescr = CDCCfgDesc;                                       
+                        len = CDCCfgDescLen;
                         break;
                     case 3:
                         if(UsbSetupBuf->wValueL == 0)
@@ -133,7 +122,7 @@ void USB_EP0_SETUP(){
                         }
                         len = SetupLen >= DEFAULT_ENDP0_SIZE ? DEFAULT_ENDP0_SIZE : SetupLen;                            //transmit length for this packet
                         for (uint8_t i=0;i<len;i++){
-                            Ep0Buffer[i] = pDescr[i];
+                            EpABuffer[i] = pDescr[i];
                         }
                         SetupLen -= len;
                         pDescr += len;
@@ -143,7 +132,7 @@ void USB_EP0_SETUP(){
                     SetupLen = UsbSetupBuf->wValueL;                              // Save the assigned address
                     break;
                 case USB_GET_CONFIGURATION:
-                    Ep0Buffer[0] = UsbConfig;
+                    EpABuffer[0] = UsbConfig;
                     if ( SetupLen >= 1 )
                     {
                         len = 1;
@@ -161,7 +150,7 @@ void USB_EP0_SETUP(){
                     {
                         if( ( ( ( uint16_t )UsbSetupBuf->wValueH << 8 ) | UsbSetupBuf->wValueL ) == 0x01 )
                         {
-                            if( CfgDesc[ 7 ] & 0x20 )
+                            if( CDCCfgDesc[ 7 ] & 0x20 )
                             {
                                 // wake up
                             }
@@ -218,7 +207,7 @@ void USB_EP0_SETUP(){
                     {
                         if( ( ( ( uint16_t )UsbSetupBuf->wValueH << 8 ) | UsbSetupBuf->wValueL ) == 0x01 )
                         {
-                            if( CfgDesc[ 7 ] & 0x20 )
+                            if( CDCCfgDesc[ 7 ] & 0x20 )
                             {
                                 // suspend
 
@@ -286,8 +275,8 @@ void USB_EP0_SETUP(){
                     }
                     break;
                 case USB_GET_STATUS:
-                    Ep0Buffer[0] = 0x00;
-                    Ep0Buffer[1] = 0x00;
+                    EpABuffer[0] = 0x00;
+                    EpABuffer[1] = 0x00;
                     if ( SetupLen >= 2 )
                     {
                         len = 2;
@@ -324,16 +313,17 @@ void USB_EP0_SETUP(){
     }
 }
 
-void USB_EP0_IN(){
+//same
+void CDC_USB_EP0_IN(){
     switch(SetupReq)
     {
         case USB_GET_DESCRIPTOR:
         {
             uint8_t len = SetupLen >= DEFAULT_ENDP0_SIZE ? DEFAULT_ENDP0_SIZE : SetupLen;                                 //send length
             for (uint8_t i=0;i<len;i++){
-                Ep0Buffer[i] = pDescr[i];
+                EpABuffer[i] = pDescr[i];
             }
-            //memcpy( Ep0Buffer, pDescr, len );                                  
+            //memcpy( EpABuffer, pDescr, len );                                  
             SetupLen -= len;
             pDescr += len;
             UEP0_T_LEN = len;
@@ -351,7 +341,8 @@ void USB_EP0_IN(){
     }
 }
 
-void USB_EP0_OUT(){
+//almost same
+void CDC_USB_EP0_OUT(){
     if(SetupReq ==SET_LINE_CODING)  //Set line coding
     {
         if( U_TOG_OK )
@@ -369,15 +360,32 @@ void USB_EP0_OUT(){
 }
 
 
-void USB_EP1_IN(){
+void CDC_USB_EP1_IN(){
     UEP1_T_LEN = 0;
     UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK;           // Default NAK
 }
 
 
+void CDC_USB_EP2_IN(){
+    UEP2_T_LEN = 0;                                                    // No data to send anymore
+    UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK;           //Respond NAK by default
+    UpPoint2_Busy = 0;                                                  //Clear busy flag
+}
+
+void CDC_USB_EP2_OUT(){
+    if ( U_TOG_OK )                                                     // Discard unsynchronized packets
+    {
+        USBByteCountEP2 = USB_RX_LEN;
+        USBBufOutPointEP2 = 0;                                             //Reset Data pointer for fetching
+        if (USBByteCountEP2)    
+            UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_NAK;       //Respond NAK after a packet. Let main code change response after handling.
+    }
+}
+
+
 #pragma save
 #pragma nooverlay
-void USBInterrupt(void) {   //inline not really working in multiple files in SDCC
+void CDCUSBInterrupt(void) {   //inline not really working in multiple files in SDCC
     if(UIF_TRANSFER) {
         // Dispatch to service functions
         uint8_t callIndex=USB_INT_ST & MASK_UIS_ENDP;
@@ -385,23 +393,8 @@ void USBInterrupt(void) {   //inline not really working in multiple files in SDC
             case UIS_TOKEN_OUT:
             {//SDCC will take IRAM if array of function pointer is used.
                 switch (callIndex) {
-                    case 0: EP0_OUT_Callback(); break;
-                    case 1: EP1_OUT_Callback(); break;
-                    case 2: EP2_OUT_Callback(); break;
-                    case 3: EP3_OUT_Callback(); break;
-                    case 4: EP4_OUT_Callback(); break;
-                    default: break;
-                }
-            }
-                break;
-            case UIS_TOKEN_SOF:
-            {//SDCC will take IRAM if array of function pointer is used.
-                switch (callIndex) {
-                    case 0: EP0_SOF_Callback(); break;
-                    case 1: EP1_SOF_Callback(); break;
-                    case 2: EP2_SOF_Callback(); break;
-                    case 3: EP3_SOF_Callback(); break;
-                    case 4: EP4_SOF_Callback(); break;
+                    case 0: CDC_USB_EP0_OUT(); break;
+                    case 2: CDC_USB_EP2_OUT(); break;
                     default: break;
                 }
             }
@@ -409,11 +402,9 @@ void USBInterrupt(void) {   //inline not really working in multiple files in SDC
             case UIS_TOKEN_IN:
             {//SDCC will take IRAM if array of function pointer is used.
                 switch (callIndex) {
-                    case 0: EP0_IN_Callback(); break;
-                    case 1: EP1_IN_Callback(); break;
-                    case 2: EP2_IN_Callback(); break;
-                    case 3: EP3_IN_Callback(); break;
-                    case 4: EP4_IN_Callback(); break;
+                    case 0: CDC_USB_EP0_IN(); break;
+                    case 1: CDC_USB_EP1_IN(); break;
+                    case 2: CDC_USB_EP2_IN(); break;
                     default: break;
                 }
             }
@@ -421,11 +412,7 @@ void USBInterrupt(void) {   //inline not really working in multiple files in SDC
             case UIS_TOKEN_SETUP:
             {//SDCC will take IRAM if array of function pointer is used.
                 switch (callIndex) {
-                    case 0: EP0_SETUP_Callback(); break;
-                    case 1: EP1_SETUP_Callback(); break;
-                    case 2: EP2_SETUP_Callback(); break;
-                    case 3: EP3_SETUP_Callback(); break;
-                    case 4: EP4_SETUP_Callback(); break;
+                    case 0: CDC_USB_EP0_SETUP(); break;
                     default: break;
                 }
             }
@@ -471,7 +458,8 @@ void USBInterrupt(void) {   //inline not really working in multiple files in SDC
 }
 #pragma restore
 
-void USBDeviceCfg()
+//same
+void CDCUSBDeviceCfg(void)
 {
     USB_CTRL = 0x00;                                                           //Clear USB control register
     USB_CTRL &= ~bUC_HOST_MODE;                                                //This bit is the device selection mode
@@ -490,7 +478,8 @@ void USBDeviceCfg()
     UDEV_CTRL |= bUD_PORT_EN;                                                  //Enable physical port
 }
 
-void USBDeviceIntCfg()
+//same
+void CDCUSBDeviceIntCfg(void)
 {
     USB_INT_EN |= bUIE_SUSPEND;                                               //Enable device hang interrupt
     USB_INT_EN |= bUIE_TRANSFER;                                              //Enable USB transfer completion interrupt
@@ -500,15 +489,15 @@ void USBDeviceIntCfg()
     EA = 1;                                                                   //Enable global interrupts
 }
 
-void USBDeviceEndPointCfg()
+void CDCUSBDeviceEndPointCfg(void)
 {
-    UEP1_DMA = (uint16_t) Ep1Buffer;                                                      //Endpoint 1 data transfer address
-    UEP2_DMA = (uint16_t) Ep2Buffer;                                                      //Endpoint 2 data transfer address
+    UEP1_DMA = (uint16_t) EpBBuffer;                                                      //Endpoint 1 data transfer address
+    UEP2_DMA = (uint16_t) EpCBuffer;                                                      //Endpoint 2 data transfer address
     UEP2_3_MOD = 0x0C;                                                         //Endpoint2 double buffer
     UEP1_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK;                //Endpoint 1 automatically flips the sync flag, and IN transaction returns NAK
     UEP2_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK | UEP_R_RES_ACK;        //Endpoint 2 automatically flips the sync flag, IN transaction returns NAK, OUT returns ACK
     
-    UEP0_DMA = (uint16_t) Ep0Buffer;                                                      //Endpoint 0 data transfer address
+    UEP0_DMA = (uint16_t) EpABuffer;                                                      //Endpoint 0 data transfer address
     UEP4_1_MOD = 0X40;                                                         //endpoint1 TX enable
     UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;                //Manual flip, OUT transaction returns ACK, IN transaction returns NAK
 }

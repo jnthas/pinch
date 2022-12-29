@@ -4,13 +4,37 @@
 #include <stdint.h>
 #include "ch552.h"
 #include "USBHandlerStrategy.h"
+#include "cdc/USBHandlerCDC.h"
 #include "hid/USBHandlerHID.h"
+
+
+
+#define UsbSetupBuf     ((PUSB_SETUP_REQ)EpABuffer)
+
+#define  EP0_ADDR 0
+#define  EP1_ADDR 10
+#define  EP2_ADDR 20
 
 
 extern __xdata USBInterruptStrategy USBHandler_usbInterrupt;
 extern __xdata USBDeviceCfgStrategy USBHandler_usbDeviceCfg;
 extern __xdata USBDeviceIntCfgStrategy USBHandler_usbDeviceIntCfg;
 extern __xdata USBDeviceEndPointCfgStrategy USBHandler_usbDeviceEndpointCfg;
+
+
+
+// Commons
+
+extern volatile uint8_t usbMsgFlags;    // uint8_t usbMsgFlags copied from VUSB
+
+extern __xdata uint8_t  EpABuffer[];  // Ep0 - Used by CDC and HID with same size (8 bytes)
+extern __xdata uint8_t  EpBBuffer[];  // Ep1 - In CDC it uses 8 bytes, in HID it uses 128 bytes
+extern __xdata uint8_t  EpCBuffer[];  // Ep2 - Only used by CDC (128 bytes)
+
+extern uint16_t SetupLen;
+extern uint8_t SetupReq,UsbConfig;
+extern const __code uint8_t *pDescr;
+
 
 
 //Common String Descriptors

@@ -12,8 +12,12 @@ C_FILES = \
 	App/core/USBHandler.c \
 	App/core/hid/USBHIDKeyboard.c \
 	App/core/hid/USBHandlerHID.c \
-	App/core/hid/USBconstant.c \
+	App/core/hid/HIDConstant.c \
+	App/core/cdc/USBCDC.c \
+	App/core/cdc/USBHandlerCDC.c \
+	App/core/cdc/CDCConstant.c \
 	App/core/GPIO.c \
+	App/core/Print.c \
 	App/components/w25qxx.c \
 	App/components/sevenSegmentDisplay.c \
 	App/components/inputButton.c \

@@ -1,8 +1,8 @@
-#include "USBconstant.h"
+#include "HIDConstant.h"
 
 
 //Device descriptor
-__code uint8_t DevDesc[] = {
+__code uint8_t HIDDevDesc[] = {
     0x12,0x01,
     0x10,0x01,  //USB spec release number in BCD format, USB1.1 (0x10, 0x01).
     0x00,0x00,0x00, //bDeviceClass, bDeviceSubClass, bDeviceProtocol 
@@ -13,10 +13,10 @@ __code uint8_t DevDesc[] = {
     0x01    //bNumConfigurations
 };
 
-__code uint16_t DevDescLen = sizeof(DevDesc);
+__code uint16_t HIDDevDescLen = sizeof(HIDDevDesc);
 
-__code uint8_t CfgDesc[] ={
-    0x09,0x02,sizeof(CfgDesc) & 0xff,sizeof(CfgDesc) >> 8,
+__code uint8_t HIDCfgDesc[] ={
+    0x09,0x02,sizeof(HIDCfgDesc) & 0xff,sizeof(HIDCfgDesc) >> 8,
     0x01,0x01,0x00,0x80,0x64,             //Configuration descriptor (1 interface)
     // Interface 1 (HID) descriptor
     0x09,0x04,0x00,0x00,0x02,0x03,0x01,0x01,0x00,    // HID Keyboard, 2 endpoints
@@ -25,7 +25,7 @@ __code uint8_t CfgDesc[] ={
     0x07,0x05,0x81,0x03,0x08,0x00,0x0A,                       //endpoint descriptor
 };
 
-__code uint16_t CfgDescLen = sizeof(CfgDesc);
+__code uint16_t HIDCfgDescLen = sizeof(HIDCfgDesc);
 
 __code uint16_t ReportDescLen = sizeof(ReportDesc);
 

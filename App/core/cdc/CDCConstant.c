@@ -1,8 +1,8 @@
-#include "USBconstant.h"
+#include "CDCConstant.h"
 
 
 //Device descriptor
-__code uint8_t DevDesc[] = {
+__code uint8_t CDCDevDesc[] = {
     0x12,0x01,
     0x10,0x01,  //USB spec release number in BCD format, USB1.1 (0x10, 0x01).
     0xEF,0x02,0x01, //bDeviceClass, bDeviceSubClass, bDeviceProtocol 
@@ -13,10 +13,10 @@ __code uint8_t DevDesc[] = {
     0x01    //bNumConfigurations
 };
 
-__code uint16_t DevDescLen = sizeof(DevDesc);
+__code uint16_t CDCDevDescLen = sizeof(CDCDevDesc);
 
-__code uint8_t CfgDesc[] ={
-    0x09,0x02,sizeof(CfgDesc) & 0xff,sizeof(CfgDesc) >> 8,
+__code uint8_t CDCCfgDesc[] ={
+    0x09,0x02,sizeof(CDCCfgDesc) & 0xff,sizeof(CDCCfgDesc) >> 8,
     0x02,0x01,0x00,0x80,0x64,             //Configuration descriptor (2 interfaces)
     // Interface Association Descriptor, IAD, this packes following 2 interfaces into 1
     0x08,0x0B,0x00,0x02,0x02,0x02,0x01,0x04,
@@ -35,22 +35,8 @@ __code uint8_t CfgDesc[] ={
 
 };
 
-__code uint16_t CfgDescLen = sizeof(CfgDesc);
+__code uint16_t CDCCfgDescLen = sizeof(CDCCfgDesc);
 
-//String Descriptors
-__code uint8_t LangDes[]={0x04,0x03,0x09,0x04};           //Language Descriptor
-__code uint16_t LangDesLen = sizeof(LangDes);
-__code uint8_t SerDes[]={                                 //Serial String Descriptor
-    0x0C,0x03,
-    'C',0x00,'H',0x00,'5',0x00,'5',0x00,'x',0x00
-};
-__code uint16_t SerDesLen = sizeof(SerDes);
-__code uint8_t Prod_Des[]={                                //Produce String Descriptor
-    0x16,0x03,
-    'C',0x00,'H',0x00,'5',0x00,'5',0x00,'x',0x00,'d',0x00,
-    'u',0x00,'i',0x00,'n',0x00,'o',0x00
-};
-__code uint16_t Prod_DesLen = sizeof(Prod_Des);
 
 __code uint8_t CDC_Des[]={                            
     0x16,0x03,
@@ -58,9 +44,3 @@ __code uint8_t CDC_Des[]={
     'r',0x00,'i',0x00,'a',0x00,'l',0x00
 };
 __code uint16_t CDC_DesLen = sizeof(CDC_Des);
-
-__code uint8_t Manuf_Des[]={
-    0x0E,0x03,
-    'D',0x00,'e',0x00,'q',0x00,'i',0x00,'n',0x00,'g',0x00,
-};
-__code uint16_t Manuf_DesLen = sizeof(Manuf_Des);

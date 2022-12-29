@@ -3,18 +3,10 @@
 
 #include <stdint.h>
 #include "ch552.h"
-#include "USBconstant.h"
+#include "HIDConstant.h"
 #include "../USBHandler.h"
 
-extern __xdata __at (EP0_ADDR) uint8_t  Ep0Buffer[];
-extern __xdata __at (EP1_ADDR) uint8_t  Ep1Buffer[];
-
-extern uint16_t SetupLen;
-extern uint8_t SetupReq,UsbConfig;
-extern const __code uint8_t *pDescr;
-
-
-#define UsbSetupBuf     ((PUSB_SETUP_REQ)Ep0Buffer)
+extern volatile __xdata uint8_t UpPoint1_Busy;
 
 
 void HIDUSBInterrupt(void);
