@@ -6,15 +6,20 @@
 #include <stdio.h>
 #include "ch552.h"
 #include "debug.h"
+#include "core/Print.h"
+#include "core/GPIO.h"
+#include "core/USBHandler.h"
+#include "core/hid/USBHIDKeyboard.h"
+#include "core/cdc/USBCDC.h"
 #include "components/sevenSegmentDisplay.h"
 #include "components/inputButton.h"
 #include "app/pinch.h"
 #include "app/locker.h"
 
-void USBInterrupt(void);                              // USBInterrupt does not need to saves the context
+
 void DeviceUSBInterrupt(void) __interrupt(INT_NO_USB) // USB interrupt service
 {
-  USBInterrupt();
+  USBHandler_usbInterrupt();
 }
 
 __xdata uint8_t displayPos = 0;
@@ -40,11 +45,15 @@ void setup()
   uint8_t currentButtonState = Button_startupCheck();
   if (currentButtonState == BUTTON_A_PRESSED) {
     // CDC Mode
-    USBInit();
+    USBSerial_setup();
+    USBSerial();
+    pinch_state = CDCMode;
   } else {
     // KBD Mode (Default)
-    USBInit();
-  } 
+    Keyboard_setup();
+    pinch_state = KBDMode;
+  }   
+
   
   SPISetup();
 
@@ -57,6 +66,7 @@ void setup()
 
 void loop()
 {
+ 
   switch (pinch_state) 
   {
     case Locked:

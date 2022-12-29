@@ -33,46 +33,44 @@ void setup()
   CfgFsys();
   mDelaymS(10);
 
-  Button_setup();
+  //Keyboard_setup();
+  USBSerial_setup();
+  USBSerial();
   
-  uint8_t currentButtonState = Button_startupCheck();
-  if (currentButtonState == BUTTON_A_PRESSED) {
-    // CDC Mode
-    USBSerial_setup();
-    USBSerial();
-  } else {
-    // KBD Mode (Default)
-    Keyboard_setup();
-  }   
-
   SPISetup();
   Display_setup();
+  Button_setup();
 }
 
 void pinchButtonEvent(ButtonState event)
 {
-
-  if (event == BUTTON_A_PRESSED)
+  uint8_t buttonARead = analogRead(11);
+  uint8_t buttonBRead = analogRead(32);
+  if (event == BUTTON_A_RELEASED)
   {
     
-    Keyboard_write('A');
-    Keyboard_write('B');
-    Keyboard_write('C');
+    
+  
+    printNumbers(buttonARead, DEC);
+    printLineBreak();
+    printNumbers(buttonBRead, DEC);
+    printText("---\n");
 
   }
-  else if (event == BUTTON_B_PRESSED)
+  else if (event == BUTTON_B_RELEASED)
   {
-    USBSerial_write('A');
-    USBSerial_write('B');
-    USBSerial_write('C');
-    USBSerial_write('D');
-    USBSerial_flush();
+  
+    printNumbers(buttonARead, DEC);
+    printLineBreak();
+    printNumbers(buttonBRead, DEC);
+    printText("---\n");
+    
 
     Display_setDigit('C', 0);
     Display_setDigit('D', 1);
     Display_setDigit('C', 2);
   }
-  else if (event == BUTTON_C_PRESSED)
+  else if (event == BUTTON_C_RELEASED)
   {
     Display_setDigit(' ', 0);
     Display_setDigit(' ', 1);
@@ -96,19 +94,19 @@ void loop()
   //     lastMillis = 0;
   // }
 
-  if (currentMillis == 400) {
+  if (currentMillis % 400 == 0) {
     Display_marquee("Pinch", 5, displayPos);        
   }
 
-  if (currentMillis >= 800) {
+  if (currentMillis % 800 == 0) {
     statsled = !statsled;
     Display_setLed(!statsled);
-    currentMillis = 0;
   }
 
 
-  Display_update();
   Button_loop(&pinchButtonEvent);
+  Display_update();
+  
 }
 
 void main()

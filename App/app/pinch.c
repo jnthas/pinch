@@ -35,15 +35,14 @@ void Pinch_setup()
 
 
 void Pinch_loop(__xdata unsigned long currentMillis) {
-  if (currentMillis % 100 == 0)
+  if (currentMillis % 96 == 0)
   {
-
     Display_setDigit(Pinch_currentBlock()+65, 0);
     Display_setDigit(Pinch_currentSector() < 10 ? '0' : '1', 1);
     Display_setDigit((Pinch_currentSector() % 10) + 48, 2);
 
   }
-    
+
   Button_loop(&Pinch_handleInputButton);
 
   Pinch_ProtocolLoop();

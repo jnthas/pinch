@@ -5,7 +5,7 @@
 #define BUTTON_B 32
 
 #define HIGH_THRESHOLD 80
-#define LOW_THRESHOLD 10
+#define LOW_THRESHOLD 20
 
 __xdata bool buttonAPressed = false;
 __xdata bool buttonBPressed = false;

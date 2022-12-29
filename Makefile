@@ -8,7 +8,7 @@ XRAM_SIZE = 0x0400
 XRAM_LOC = 0x0400
 
 C_FILES = \
-	App/test_keyboard.c \
+	App/main.c \
 	App/core/USBHandler.c \
 	App/core/hid/USBHIDKeyboard.c \
 	App/core/hid/USBHandlerHID.c \
@@ -22,6 +22,7 @@ C_FILES = \
 	App/components/sevenSegmentDisplay.c \
 	App/components/inputButton.c \
 	App/app/locker.c \
+	App/app/pinch.c \
 	include/debug.c \
 	include/spi.c
 
