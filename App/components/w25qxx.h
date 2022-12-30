@@ -34,8 +34,8 @@
 #define FLASH_BUFFER_SIZE 32
 
 
-static __xdata uint8_t UNIQUEID[8] = {0};
-static __xdata uint8_t _sbuffer[FLASH_BUFFER_SIZE];
+extern __xdata uint8_t UNIQUEID[8];
+extern __xdata uint8_t _sbuffer[FLASH_BUFFER_SIZE];
 
 
 /* Hardware interface definition */

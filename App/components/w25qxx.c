@@ -1,6 +1,10 @@
 
 #include "w25qxx.h"
 
+
+__xdata uint8_t UNIQUEID[8] = {0};
+__xdata uint8_t _sbuffer[FLASH_BUFFER_SIZE] = {0};
+
 void SPISetup()
 {
   SPIMasterModeSet(3); // SPI master mode setting, mode 3
