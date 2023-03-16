@@ -1,6 +1,6 @@
-![Pinch Logo](https://github.com/jnthas/pinch/blob/main/resources/logo.gif?raw=true)
-
 # Pinch: a password storage for nerds
+
+![Pinch Logo](https://github.com/jnthas/pinch/blob/main/resources/logo.gif?raw=true)
 
 ## What is Pinch?
 
