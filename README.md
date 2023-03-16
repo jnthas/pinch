@@ -1,4 +1,4 @@
-![Pinch Logo](https://github.com/jnthas/pinch/blob/main/pinch_logo.png?raw=true)
+![Pinch Logo](https://github.com/jnthas/pinch/blob/main/resources/logo.gif?raw=true)
 
 Password store for nerds
 
