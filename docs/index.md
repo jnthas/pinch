@@ -5,7 +5,7 @@ Pinch is an open-source, personal and portable device capable of storing, retrie
 Pinch is the size of a USB flash drive. It has a USB interface, two buttons and a three digit display which are used to select and confirm the desired password. When confirming, simply put the focus on the password field and the Pinch will enter it for you.
 
 
-<img class="center" alt="Pinch Animation" src="../resources/pinch.gif" />
+<img class="center" alt="Pinch Animation" src="https://raw.githubusercontent.com/jnthas/pinch/main/resources/pinch.gif" />
 
 
 ## How does Pinch work?
