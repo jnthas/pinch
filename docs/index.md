@@ -1,5 +1,6 @@
+<div style="text-align: center">
 <iframe width="560" height="315" src="https://www.youtube.com/embed/X7CdZzqYkFY" title="Pinch promo video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-
+</div>
 
 Pinch is an open-source, personal and portable device capable of storing, retrieving and entering your passwords on demand. It is a physical device with no internet access and only works through manual activation.
 Pinch is the size of a USB flash drive. It has a USB interface, two buttons and a three digit display which are used to select and confirm the desired password. When confirming, simply put the focus on the password field and the Pinch will enter it for you.
