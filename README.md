@@ -2,6 +2,10 @@
 
 ![Pinch Logo](https://github.com/jnthas/pinch/blob/main/resources/logo.gif?raw=true)
 
+## Featuring video
+[![Featuring Pinch video](https://img.youtube.com/vi/X7CdZzqYkFY/0.jpg)](https://www.youtube.com/watch?v=X7CdZzqYkFY)
+
+
 ## What is Pinch?
 
 ![What is Pinch?](https://github.com/jnthas/pinch/blob/main/resources/whatis.png?raw=true)
